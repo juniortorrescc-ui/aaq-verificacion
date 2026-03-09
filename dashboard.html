@@ -1475,40 +1475,134 @@ async function exportarReportePDF() {
     });
     y += 24;
 
-    // ANÁLISIS AUTOMÁTICO EN PDF
-    checkPage(35);
-    doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
-    doc.text('ANÁLISIS DEL PERÍODO', ml+3, y+4.5); y+=8;
+    // ANÁLISIS DETALLADO EN PDF
+    checkPage(90);
+    doc.setFillColor(...C.red); doc.rect(ml,y,cw,7,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...C.white);
+    doc.text('ANÁLISIS EJECUTIVO DEL PERÍODO', ml+3, y+5); y+=9;
 
-    const promA = avgPct(reporteData)??0;
-    const nivelA = promA>=80?'ACEPTABLE':promA>=60?'EN PROCESO':'CRÍTICO';
-    const colNivel = promA>=80?C.cumple:promA>=60?C.ep:C.nc;
-    const elemNombresA = ['Sup.Operativo','Personal','Sup.SHE','Recursos','G.Ambiental'];
+    const promA   = avgPct(reporteData)??0;
+    const nivelA  = promA>=80?'ACEPTABLE':promA>=60?'EN PROCESO':promA>=40?'CRÍTICO':'MUY CRÍTICO';
+    const colNivelA = promA>=80?C.cumple:promA>=60?C.ep:C.nc;
+    const elemNombresA = ['Supervisor Operativo','Personal / Trabajadores','Supervisor SHE','Recursos','Gestión Ambiental'];
     const elemAvgsA = [1,2,3,4,5].map(i=>{
       const vs=reporteData.map(a=>parseFloat(a[`pct_elem${i}`])).filter(v=>!isNaN(v));
-      return vs.length?Math.round(vs.reduce((s,v)=>s+v,0)/vs.length):0;
+      return vs.length ? Math.round(vs.reduce((s,v)=>s+v,0)/vs.length) : 0;
     });
     const mejorElemA = elemAvgsA.indexOf(Math.max(...elemAvgsA));
     const peorElemA  = elemAvgsA.indexOf(Math.min(...elemAvgsA));
+    const byEmpA = {};
+    reporteData.forEach(a=>{ if(!byEmpA[a.empresa]) byEmpA[a.empresa]=[]; byEmpA[a.empresa].push(a); });
+    const empRowsA = Object.entries(byEmpA).map(([e,aud])=>({emp:e,pct:avgPct(aud),n:aud.length})).sort((a,b)=>(b.pct||0)-(a.pct||0));
+    const sortedDates = [...reporteData].sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
+    const tendenciaA = sortedDates.length>=2
+      ? (parseFloat(sortedDates[sortedDates.length-1]?.pct_general||0) > parseFloat(sortedDates[0]?.pct_general||0) ? 'POSITIVA ↑' : 'NEGATIVA ↓')
+      : 'INSUFICIENTE';
+    const tendColorA = tendenciaA.includes('POSITIVA') ? C.cumple : C.nc;
 
-    const analisisLines = [
-      `Período: ${meses[mes]} ${anio} — ${reporteData.length} verificación(es) | Nivel: ${nivelA} (${promA}%)`,
-      `Elemento más fortalecido: ${elemNombresA[mejorElemA]} (${elemAvgsA[mejorElemA]}%) | A reforzar: ${elemNombresA[peorElemA]} (${elemAvgsA[peorElemA]}%)`,
-      empresaRows.length>1 ? `Mejor empresa: ${empresaRows[0].emp} (${empresaRows[0].pct}%) | Requiere atención: ${empresaRows[empresaRows.length-1].emp} (${empresaRows[empresaRows.length-1].pct}%)` : '',
-    ].filter(Boolean);
+    // ── Bloque resumen ejecutivo ──────────────────────────────────
+    doc.setFillColor(248,249,250); doc.rect(ml,y,cw,28,'F');
+    doc.setDrawColor(...C.border); doc.rect(ml,y,cw,28,'S');
 
-    doc.setFillColor(255,251,235); doc.rect(ml,y,cw, analisisLines.length*7+6,'F');
-    doc.setDrawColor(253,224,71); doc.rect(ml,y,cw, analisisLines.length*7+6,'S');
-    analisisLines.forEach((line,i) => {
-      doc.setFont('helvetica', i===0?'bold':'normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(i===0?colNivel[0]:C.dark[0], i===0?colNivel[1]:C.dark[1], i===0?colNivel[2]:C.dark[2]);
-      doc.text(line, ml+4, y+5+i*7);
+    // Nivel badge
+    doc.setFillColor(...colNivelA);
+    doc.roundedRect(ml+3,y+3,38,8,2,2,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.white);
+    doc.text(nivelA, ml+22, y+8, {align:'center'});
+
+    // Tendencia badge
+    doc.setFillColor(...tendColorA);
+    doc.roundedRect(ml+44,y+3,30,8,2,2,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.white);
+    doc.text('TENDENCIA '+tendenciaA.split(' ')[0], ml+59, y+8, {align:'center'});
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...C.dark);
+    doc.text(`Período: ${meses[mes]} ${anio}  |  Verificaciones: ${reporteData.length}  |  Promedio general: ${promA}%`, ml+3, y+18);
+    doc.text(`Empresas auditadas: ${Object.keys(byEmpA).length}  |  Elementos evaluados: 5  |  Ítems por auditoría: 56`, ml+3, y+24);
+    y+=32;
+
+    // ── Análisis por elemento ─────────────────────────────────────
+    checkPage(55);
+    doc.setFillColor(26,26,46); doc.rect(ml,y,cw,6,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.white);
+    doc.text('ANÁLISIS POR ELEMENTO', ml+3, y+4.5); y+=8;
+
+    const elemAnalisis = [
+      { nombre:'1. Supervisor Operativo',    obs:'Evalúa gestión de riesgos, competencias del personal y liderazgo SHE del supervisor.' },
+      { nombre:'2. Personal / Trabajadores', obs:'Mide competencia, experiencia, empoderamiento y responsabilidad de los trabajadores.' },
+      { nombre:'3. Supervisor SHE',          obs:'Evalúa competencia técnica, liderazgo en campo y cumplimiento normativo SHE.' },
+      { nombre:'4. Recursos',                obs:'Verifica estado de maquinaria, equipos móviles, herramientas y materiales.' },
+      { nombre:'5. Gestión Ambiental',       obs:'Controla manejo de residuos, derrames y aspectos ambientales en faena.' },
+    ];
+
+    elemAnalisis.forEach((el, i) => {
+      checkPage(14);
+      const pctE = elemAvgsA[i];
+      const colE = pctE>=80?C.cumple:pctE>=60?C.ep:C.nc;
+      const estadoE = pctE>=80?'Fortaleza':pctE>=60?'En desarrollo':'Requiere atención';
+
+      doc.setFillColor(i%2===0?250:245, i%2===0?250:248, i%2===0?252:252);
+      doc.rect(ml,y,cw,12,'F');
+      doc.setDrawColor(...C.border); doc.rect(ml,y,cw,12,'S');
+
+      // Barra de progreso
+      const barW = 35;
+      doc.setFillColor(229,231,235); doc.rect(ml+3,y+7,barW,3,'F');
+      doc.setFillColor(...colE); doc.rect(ml+3,y+7,barW*(pctE/100),3,'F');
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.dark);
+      doc.text(el.nombre, ml+3, y+4.5);
+      doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...C.na);
+      doc.text(el.obs, ml+3, y+11.5);
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...colE);
+      doc.text(pctE+'%', pw-mr-3, y+7, {align:'right'});
+      doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...colE);
+      doc.text(estadoE, pw-mr-3, y+11, {align:'right'});
+      y+=13;
     });
-    y += analisisLines.length*7+10;
 
-    // GRÁFICO BARRAS
+    // ── Conclusiones y recomendaciones ────────────────────────────
+    checkPage(50);
+    y+=4;
+    doc.setFillColor(26,26,46); doc.rect(ml,y,cw,6,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.white);
+    doc.text('CONCLUSIONES Y RECOMENDACIONES', ml+3, y+4.5); y+=8;
+
+    const recomendaciones = [];
+    if (promA >= 80) {
+      recomendaciones.push('✅ El desempeño general del período es ACEPTABLE. Mantener los estándares actuales y continuar con las verificaciones periódicas.');
+    } else if (promA >= 60) {
+      recomendaciones.push('⚠️ El desempeño está EN PROCESO. Se recomienda reforzar los planes de acción correctiva para alcanzar el nivel aceptable (≥80%).');
+    } else {
+      recomendaciones.push('❌ El desempeño es CRÍTICO. Se requiere intervención inmediata: reunión de emergencia con supervisores y plan correctivo urgente.');
+    }
+    recomendaciones.push(`📊 Elemento más débil: "${elemNombresA[peorElemA]}" con ${elemAvgsA[peorElemA]}%. Priorizar capacitaciones y controles en esta área.`);
+    recomendaciones.push(`💪 Elemento más fuerte: "${elemNombresA[mejorElemA]}" con ${elemAvgsA[mejorElemA]}%. Documentar buenas prácticas para replicarlas.`);
+    if (tendenciaA.includes('NEGATIVA')) {
+      recomendaciones.push('📉 La tendencia del período es NEGATIVA. Revisar cambios recientes en personal, procesos o condiciones de trabajo que puedan explicar el descenso.');
+    } else if (tendenciaA.includes('POSITIVA')) {
+      recomendaciones.push('📈 La tendencia del período es POSITIVA. Las acciones correctivas implementadas están dando resultados. Continuar con el seguimiento.');
+    }
+    if (empRowsA.length > 1) {
+      recomendaciones.push(`🏢 Empresa que requiere mayor seguimiento: "${empRowsA[empRowsA.length-1].emp}" con ${empRowsA[empRowsA.length-1].pct}%. Coordinar visita de verificación adicional.`);
+    }
+    recomendaciones.push(`📅 Próxima verificación recomendada: ${promA<60?'INMEDIATA (dentro de 7 días)':promA<80?'Quincenal':'Mensual según programa establecido'}.`);
+
+    recomendaciones.forEach((rec, i) => {
+      checkPage(12);
+      const lines = doc.splitTextToSize(rec, cw-8);
+      const h = lines.length * 5 + 5;
+      doc.setFillColor(i%2===0?255:248, i%2===0?251:249, i%2===0?235:250);
+      doc.rect(ml,y,cw,h,'F');
+      doc.setDrawColor(...C.border); doc.rect(ml,y,cw,h,'S');
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.dark);
+      lines.forEach((l,li) => doc.text(l, ml+4, y+4+li*5));
+      y += h+2;
+    });
+    y += 6;
+
+        // GRÁFICO BARRAS
     const rptBarCanvas = document.getElementById('rpt-chart-barras');
     if (rptBarCanvas) {
       checkPage(55);
