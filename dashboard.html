@@ -564,7 +564,7 @@
 
     <!-- ═══ REPORTE MENSUAL ═══ -->
     <div class="view" id="view-reporte">
-      <div class="reporte-filters">
+      <div class="reporte-filters" style="flex-wrap:wrap;align-items:flex-end">
         <div class="form-group">
           <label>Mes</label>
           <select id="reporte-mes" style="padding:9px 12px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px">
@@ -576,14 +576,22 @@
         </div>
         <div class="form-group">
           <label>Año</label>
-          <input type="number" id="reporte-anio" value="2025" min="2024" style="padding:9px 12px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px;width:90px">
+          <input type="number" id="reporte-anio" value="2026" min="2024"
+            style="padding:9px 12px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px;width:90px">
         </div>
-        <button class="btn btn-primary" onclick="loadReporte()">Generar Reporte</button>
+        <div class="form-group">
+          <label>Empresa</label>
+          <select id="reporte-empresa"
+            style="padding:9px 12px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px;min-width:180px">
+            <option value="">Todas las empresas</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="loadReporte()">🔍 Generar</button>
         <button class="btn btn-secondary" onclick="exportarExcel()">⬇ Excel</button>
-        <button class="btn btn-secondary" onclick="window.print()">🖨 PDF</button>
+        <button class="btn btn-secondary" onclick="exportarReportePDF()">🖨 PDF Completo</button>
       </div>
       <div id="reporte-content">
-        <div class="empty-state"><div class="icon">📅</div><p>Selecciona mes y año para generar el reporte.</p></div>
+        <div class="empty-state"><div class="icon">📅</div><p>Selecciona mes/año y empresa para generar el reporte.</p></div>
       </div>
     </div>
 
@@ -598,7 +606,7 @@
         <div class="section-body" style="padding:0">
           <table class="ranking-table" id="auditores-table">
             <thead>
-              <tr><th>Nombre</th><th>DNI</th><th>Área</th><th>WhatsApp</th><th>Estado</th><th>Acciones</th></tr>
+              <tr><th>Nombre</th><th>DNI</th><th>Área</th><th>WhatsApp</th><th>Email</th><th>Estado</th><th>Acciones</th></tr>
             </thead>
             <tbody id="auditores-body">
               <tr><td colspan="6" class="loading">Cargando...</td></tr>
@@ -660,6 +668,10 @@
         <input type="text" id="aud-whatsapp" placeholder="+51987654321">
       </div>
       <div class="form-group">
+        <label>Correo Electrónico *</label>
+        <input type="email" id="aud-email" placeholder="auditor@empresa.com">
+      </div>
+      <div class="form-group">
         <label>Área</label>
         <input type="text" id="aud-area" placeholder="Ej: SHE, Operaciones">
       </div>
@@ -703,13 +715,17 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
 const CONFIG = {
-  SHEETBEST_URL: 'https://api.sheetbest.com/sheets/5892a5ad-bcbb-4505-bd68-762fba3f05fe'
+  SHEETBEST_URL: 'https://api.sheetbest.com/sheets/5892a5ad-bcbb-4505-bd68-762fba3f05fe',
+  EMAILJS_SERVICE_ID:  'service_4lk395d',
+  EMAILJS_TEMPLATE_ID: 'template_ohagk2f',
+  EMAILJS_PUBLIC_KEY:  'jfs-lUeazoZ4EQ2FY',
 };
 
 let allAuditorias = [];
@@ -795,6 +811,7 @@ function showView(id) {
   document.getElementById(`nav-${id}`).classList.add('active');
   document.getElementById('page-title').textContent = viewTitles[id];
   document.getElementById('sidebar').classList.remove('open');
+  if (id === 'reporte') initReporteEmpresaFilter();
 }
 
 // ══════════════════════════════════════════════
@@ -1146,108 +1163,428 @@ function loadEmpresaDetail() {
 // REPORTE MENSUAL
 // ══════════════════════════════════════════════
 let reporteData = [];
+let reporteCharts = {};
+
+// Poblar selector empresa en reporte
+function initReporteEmpresaFilter() {
+  const sel = document.getElementById('reporte-empresa');
+  if (sel.options.length > 1) return;
+  const empresas = [...new Set(allAuditorias.map(a => a.empresa))].filter(Boolean).sort();
+  empresas.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e; opt.textContent = e;
+    sel.appendChild(opt);
+  });
+}
 
 function loadReporte() {
-  const mes = parseInt(document.getElementById('reporte-mes').value);
-  const anio = parseInt(document.getElementById('reporte-anio').value);
-
-  reporteData = allAuditorias.filter(a => {
-    const d = new Date(a.fecha);
-    return d.getMonth() + 1 === mes && d.getFullYear() === anio;
-  });
-
+  initReporteEmpresaFilter();
+  const mes      = parseInt(document.getElementById('reporte-mes').value);
+  const anio     = parseInt(document.getElementById('reporte-anio').value);
+  const empresa  = document.getElementById('reporte-empresa').value;
   const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  const container = document.getElementById('reporte-content');
+  let filtered = allAuditorias.filter(a => {
+    const d = new Date(a.fecha);
+    return d.getMonth()+1 === mes && d.getFullYear() === anio;
+  });
+  if (empresa) filtered = filtered.filter(a => a.empresa === empresa);
+  reporteData = filtered;
 
-  if (!reporteData.length) {
-    container.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>No hay verificaciones en ${meses[mes]} ${anio}.</p></div>`;
+  const container = document.getElementById('reporte-content');
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>No hay verificaciones para ${empresa||'todas las empresas'} en ${meses[mes]} ${anio}.</p></div>`;
     return;
   }
 
   const byEmpresa = {};
-  reporteData.forEach(a => {
-    if (!byEmpresa[a.empresa]) byEmpresa[a.empresa] = [];
-    byEmpresa[a.empresa].push(a);
+  filtered.forEach(a => { if(!byEmpresa[a.empresa]) byEmpresa[a.empresa]=[]; byEmpresa[a.empresa].push(a); });
+  const empresaRows = Object.entries(byEmpresa).map(([e,aud]) => ({emp:e, pct:avgPct(aud), n:aud.length}))
+    .sort((a,b)=>(b.pct||0)-(a.pct||0));
+
+  const elemShortNames = ['Sup.Operativo','Personal','Sup.SHE','Recursos','G.Ambiental'];
+
+  // Avg por elemento del periodo
+  const elemAvgs = [1,2,3,4,5].map(i=>{
+    const vals = filtered.map(a=>parseFloat(a[`pct_elem${i}`])).filter(v=>!isNaN(v));
+    return vals.length ? Math.round(vals.reduce((s,v)=>s+v,0)/vals.length) : 0;
   });
 
-  const empresaRows = Object.entries(byEmpresa).map(([emp, aud]) => {
-    const pct = avgPct(aud);
-    return { emp, pct, n: aud.length };
-  }).sort((a,b) => (b.pct||0) - (a.pct||0));
+  // Distribución C/EP/NC/NA de observaciones
+  const dist = {C:0,EP:0,NC:0,NA:0,total:0};
+  filtered.forEach(a => {
+    try {
+      const obs = JSON.parse(a.observaciones||'[]');
+      obs.forEach(o => { if(o.cal && dist[o.cal]!==undefined) dist[o.cal]++; dist.total++; });
+    } catch(e){}
+  });
+
+  // Línea temporal
+  const sortedByDate = [...filtered].sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
 
   container.innerHTML = `
-    <div class="section-card">
-      <div class="section-header">
-        <div class="section-title">📅 Reporte: ${meses[mes]} ${anio}</div>
+    <div id="reporte-printable">
+      <!-- KPIs -->
+      <div class="kpi-grid" style="margin-bottom:16px">
+        <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-value">${filtered.length}</div><div class="kpi-label">Verificaciones ${empresa?'('+empresa+')':''}</div></div>
+        <div class="kpi-card"><div class="kpi-icon">📊</div><div class="kpi-value" style="color:${getPctColor(avgPct(filtered))}">${avgPct(filtered)??'—'}%</div><div class="kpi-label">Promedio mensual</div></div>
+        <div class="kpi-card"><div class="kpi-icon">🏢</div><div class="kpi-value">${Object.keys(byEmpresa).length}</div><div class="kpi-label">Empresas</div></div>
+        <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-value" style="font-size:20px">${meses[mes]} ${anio}</div><div class="kpi-label">Período</div></div>
       </div>
-      <div class="section-body">
-        <div class="kpi-grid" style="margin-bottom:16px">
-          <div class="kpi-card">
-            <div class="kpi-icon">📋</div>
-            <div class="kpi-value">${reporteData.length}</div>
-            <div class="kpi-label">Verificaciones del mes</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icon">📊</div>
-            <div class="kpi-value" style="color:${getPctColor(avgPct(reporteData))}">${avgPct(reporteData) || '—'}%</div>
-            <div class="kpi-label">Promedio mensual</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icon">🏢</div>
-            <div class="kpi-value">${Object.keys(byEmpresa).length}</div>
-            <div class="kpi-label">Empresas auditadas</div>
-          </div>
+
+      <!-- GRÁFICOS ROW 1 -->
+      <div class="charts-grid" style="margin-bottom:16px">
+        <div class="section-card">
+          <div class="section-header"><div class="section-title">📊 Cumplimiento por Empresa</div></div>
+          <div class="section-body"><canvas id="rpt-chart-barras" height="200"></canvas></div>
         </div>
-        <table class="ranking-table">
-          <thead><tr><th>#</th><th>Empresa</th><th>Verificaciones</th><th>Promedio %</th><th>Estado</th></tr></thead>
-          <tbody>
-            ${empresaRows.map((e, i) => `
-              <tr>
-                <td><strong>${i+1}</strong></td>
-                <td><strong>${e.emp}</strong></td>
-                <td>${e.n}</td>
-                <td>
-                  <div class="pct-bar-cell">
-                    <div class="pct-bar-track">
-                      <div class="pct-bar-fill" style="width:${e.pct||0}%;background:${getPctColor(e.pct)}"></div>
+        <div class="section-card">
+          <div class="section-header"><div class="section-title">🕸 Promedio por Elemento</div></div>
+          <div class="section-body"><canvas id="rpt-chart-radar" height="200"></canvas></div>
+        </div>
+      </div>
+
+      <!-- GRÁFICOS ROW 2 -->
+      <div class="charts-grid" style="margin-bottom:16px">
+        <div class="section-card">
+          <div class="section-header"><div class="section-title">📈 Evolución Temporal</div></div>
+          <div class="section-body"><canvas id="rpt-chart-linea" height="160"></canvas></div>
+        </div>
+        <div class="section-card">
+          <div class="section-header"><div class="section-title">🍩 Distribución de Calificaciones</div></div>
+          <div class="section-body" style="display:flex;align-items:center;justify-content:center"><canvas id="rpt-chart-dona" height="200" style="max-width:300px"></canvas></div>
+        </div>
+      </div>
+
+      <!-- TABLA RANKING -->
+      <div class="section-card" style="margin-bottom:16px">
+        <div class="section-header"><div class="section-title">🏆 Ranking de Empresas — ${meses[mes]} ${anio}</div></div>
+        <div class="section-body" style="padding:0">
+          <table class="ranking-table">
+            <thead><tr><th>#</th><th>Empresa</th><th>Verificaciones</th><th>Promedio %</th><th>E1 Sup.Op</th><th>E2 Personal</th><th>E3 Sup.SHE</th><th>E4 Recursos</th><th>E5 Ambiental</th><th>Estado</th></tr></thead>
+            <tbody>
+              ${empresaRows.map((e,i) => {
+                const audEmp = byEmpresa[e.emp];
+                const elemsPct = [1,2,3,4,5].map(j=>{
+                  const vs = audEmp.map(a=>parseFloat(a[`pct_elem${j}`])).filter(v=>!isNaN(v));
+                  return vs.length ? Math.round(vs.reduce((s,v)=>s+v,0)/vs.length) : null;
+                });
+                return `<tr>
+                  <td><strong>${i+1}</strong></td>
+                  <td><strong>${e.emp}</strong></td>
+                  <td>${e.n}</td>
+                  <td><div class="pct-bar-cell">
+                    <div class="pct-bar-track"><div class="pct-bar-fill" style="width:${e.pct??0}%;background:${getPctColor(e.pct)}"></div></div>
+                    <strong style="color:${getPctColor(e.pct)};min-width:40px">${e.pct??'—'}%</strong>
+                  </div></td>
+                  ${elemsPct.map(p=>`<td><span class="badge ${getPctBadgeClass(p)}" style="font-size:10px">${p!==null?p+'%':'N/A'}</span></td>`).join('')}
+                  <td><span class="badge ${getPctBadgeClass(e.pct)}">${e.pct>=80?'✅ Aceptable':e.pct>=50?'⚠️ En Proceso':'❌ Crítico'}</span></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- HISTORIAL DETALLADO CON FOTOS -->
+      <div class="section-card">
+        <div class="section-header"><div class="section-title">📋 Detalle de Verificaciones</div></div>
+        <div class="section-body" style="padding:0">
+          <table class="ranking-table">
+            <thead><tr><th>Fecha</th><th>Empresa</th><th>Trabajo</th><th>Auditor</th><th>General</th><th>Evidencias</th></tr></thead>
+            <tbody>
+              ${sortedByDate.reverse().map(a => {
+                const pct = parseFloat(a.pct_general);
+                const fotos = parseFotos(a);
+                return `<tr>
+                  <td>${a.fecha||'—'}</td>
+                  <td><strong>${a.empresa||'—'}</strong></td>
+                  <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nombre_trabajo||'—'}</td>
+                  <td>${a.auditor||'—'}</td>
+                  <td><strong style="color:${getPctColor(pct)}">${!isNaN(pct)?pct+'%':'—'}</strong></td>
+                  <td>
+                    <div style="display:flex;gap:4px;flex-wrap:wrap">
+                      ${fotos.slice(0,3).map(f=>`<img src="${f}" style="width:36px;height:36px;border-radius:4px;object-fit:cover;border:1px solid #E5E7EB;cursor:pointer" onclick="window.open('${f}','_blank')" onerror="this.style.display='none'">`).join('')}
+                      ${fotos.length>3?`<span style="font-size:10px;color:#6B7280;align-self:center">+${fotos.length-3}</span>`:''}
                     </div>
-                    <strong style="color:${getPctColor(e.pct)}">${e.pct !== null ? e.pct+'%' : '—'}</strong>
-                  </div>
-                </td>
-                <td><span class="badge ${getPctBadgeClass(e.pct)}">${e.pct >= 80 ? '✅ Aceptable' : e.pct >= 50 ? '⚠️ En Proceso' : '❌ Crítico'}</span></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
+
+  // Render charts after DOM update
+  setTimeout(() => {
+    destroyReporteCharts();
+    // Barras por empresa
+    const ctxB = document.getElementById('rpt-chart-barras')?.getContext('2d');
+    if (ctxB) {
+      reporteCharts['barras'] = new Chart(ctxB, {
+        type:'bar',
+        data:{labels:empresaRows.map(e=>e.emp.length>16?e.emp.slice(0,14)+'…':e.emp),
+          datasets:[{label:'%',data:empresaRows.map(e=>e.pct??0),
+            backgroundColor:empresaRows.map(e=>getPctColor(e.pct)+'99'),
+            borderColor:empresaRows.map(e=>getPctColor(e.pct)),
+            borderWidth:2, borderRadius:6}]},
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}
+      });
+    }
+    // Radar por elemento
+    const ctxR = document.getElementById('rpt-chart-radar')?.getContext('2d');
+    if (ctxR) {
+      reporteCharts['radar'] = new Chart(ctxR, {
+        type:'radar',
+        data:{labels:elemShortNames,
+          datasets:[{label:'Promedio %',data:elemAvgs,
+            backgroundColor:'rgba(192,57,43,0.15)',borderColor:'#C0392B',
+            pointBackgroundColor:'#C0392B',borderWidth:2}]},
+        options:{responsive:true,scales:{r:{min:0,max:100,ticks:{display:false}}},plugins:{legend:{display:false}}}
+      });
+    }
+    // Línea temporal
+    const ctxL = document.getElementById('rpt-chart-linea')?.getContext('2d');
+    if (ctxL) {
+      reporteCharts['linea'] = new Chart(ctxL, {
+        type:'line',
+        data:{labels:sortedByDate.map(a=>a.fecha?.slice(5)||''),
+          datasets:[{label:'% General',data:sortedByDate.map(a=>parseFloat(a.pct_general)||0),
+            borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,0.08)',
+            borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#C0392B',tension:0.3,fill:true}]},
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}
+      });
+    }
+    // Dona distribución
+    const ctxD = document.getElementById('rpt-chart-dona')?.getContext('2d');
+    if (ctxD && dist.total>0) {
+      reporteCharts['dona'] = new Chart(ctxD, {
+        type:'doughnut',
+        data:{labels:['Cumple (C)','En Proceso (EP)','No Cumple (NC)','No Aplica (NA)'],
+          datasets:[{data:[dist.C,dist.EP,dist.NC,dist.NA],
+            backgroundColor:['rgba(22,163,74,0.85)','rgba(217,119,6,0.85)','rgba(220,38,38,0.85)','rgba(107,114,128,0.6)'],
+            borderWidth:2}]},
+        options:{responsive:true,plugins:{legend:{position:'right'}}}
+      });
+    }
+  }, 100);
+}
+
+function destroyReporteCharts() {
+  Object.values(reporteCharts).forEach(c => { try { c.destroy(); } catch(e){} });
+  reporteCharts = {};
+}
+
+async function exportarReportePDF() {
+  if (!reporteData.length) { alert('Genera primero el reporte antes de exportar.'); return; }
+  showSpinner('Generando PDF del reporte...');
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const pw=210, ml=12, mr=12, cw=pw-ml-mr;
+    const mes = parseInt(document.getElementById('reporte-mes').value);
+    const anio = parseInt(document.getElementById('reporte-anio').value);
+    const empFiltro = document.getElementById('reporte-empresa').value;
+    const meses=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    let y = 12;
+
+    const C = {dark:[26,26,46],red:[192,57,43],gold:[212,160,23],
+      cumple:[22,163,74],ep:[217,119,6],nc:[220,38,38],na:[107,114,128],
+      light:[248,249,250],border:[229,231,235],white:[255,255,255]};
+    const checkPage = (need=20) => { if(y+need>282){doc.addPage();y=15;} };
+
+    // PORTADA
+    doc.setFillColor(...C.dark); doc.rect(0,0,pw,36,'F');
+    doc.setFillColor(...C.red);  doc.rect(0,0,5,36,'F');
+    doc.setTextColor(...C.white); doc.setFont('helvetica','bold');
+    doc.setFontSize(16); doc.text('REPORTE MENSUAL DE VERIFICACIONES', ml+6,13);
+    doc.setFontSize(10); doc.setTextColor(...C.gold);
+    doc.text('ANGLO AMERICAN QUELLAVECO S.A.', ml+6, 21);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(180,180,180);
+    doc.text(`Período: ${meses[mes]} ${anio}  |  ${empFiltro?'Empresa: '+empFiltro:'Todas las empresas'}  |  Generado: ${new Date().toLocaleString('es-PE')}`, ml+6, 30);
+    y = 42;
+
+    // KPIs
+    const byEmp = {};
+    reporteData.forEach(a=>{ if(!byEmp[a.empresa]) byEmp[a.empresa]=[]; byEmp[a.empresa].push(a); });
+    const empresaRows = Object.entries(byEmp).map(([e,aud])=>({emp:e,pct:avgPct(aud),n:aud.length})).sort((a,b)=>(b.pct||0)-(a.pct||0));
+    const promGeneral = avgPct(reporteData);
+
+    const kpis = [
+      ['📋','Verificaciones',''+reporteData.length],
+      ['📊','Promedio General', (promGeneral??'—')+'%'],
+      ['🏢','Empresas',''+Object.keys(byEmp).length]
+    ];
+    const kpiW = cw/kpis.length;
+    kpis.forEach(([icon,label,val],i)=>{
+      const kx = ml+i*kpiW;
+      doc.setFillColor(...C.light); doc.rect(kx,y,kpiW-2,20,'F');
+      doc.setDrawColor(...C.border); doc.rect(kx,y,kpiW-2,20,'S');
+      doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(...C.dark);
+      doc.text(val, kx+(kpiW-2)/2, y+12, {align:'center'});
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.na);
+      doc.text(label, kx+(kpiW-2)/2, y+17, {align:'center'});
+    });
+    y += 24;
+
+    // GRÁFICO BARRAS
+    const rptBarCanvas = document.getElementById('rpt-chart-barras');
+    if (rptBarCanvas) {
+      checkPage(55);
+      doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+      doc.text('CUMPLIMIENTO POR EMPRESA', ml+3, y+4.5); y+=8;
+      doc.addImage(rptBarCanvas.toDataURL('image/png'),'PNG',ml,y,cw,48); y+=51;
+    }
+
+    // GRÁFICO RADAR
+    const rptRadarCanvas = document.getElementById('rpt-chart-radar');
+    if (rptRadarCanvas) {
+      checkPage(55);
+      doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+      doc.text('PROMEDIO POR ELEMENTO', ml+3, y+4.5); y+=8;
+      doc.addImage(rptRadarCanvas.toDataURL('image/png'),'PNG',ml+(cw-90)/2,y,90,60); y+=63;
+    }
+
+    // GRÁFICO LÍNEA + DONA lado a lado
+    const rptLineaCanvas = document.getElementById('rpt-chart-linea');
+    const rptDonaCanvas  = document.getElementById('rpt-chart-dona');
+    if (rptLineaCanvas && rptDonaCanvas) {
+      checkPage(60);
+      doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+      doc.text('EVOLUCIÓN TEMPORAL  |  DISTRIBUCIÓN DE CALIFICACIONES', ml+3, y+4.5); y+=8;
+      const hw = (cw-4)/2;
+      doc.addImage(rptLineaCanvas.toDataURL('image/png'),'PNG',ml,y,hw,44);
+      doc.addImage(rptDonaCanvas.toDataURL('image/png'),'PNG',ml+hw+4,y,hw,44);
+      y+=47;
+    }
+
+    // TABLA RANKING
+    checkPage(30);
+    doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+    doc.text('RANKING DE EMPRESAS', ml+3, y+4.5); y+=8;
+
+    // Table header
+    const cols=[['#',8],['Empresa',45],['Verif.',14],['E1',13],['E2',13],['E3',13],['E4',13],['E5',13],['General',20]];
+    doc.setFillColor(...C.light); doc.rect(ml,y,cw,6,'F');
+    let cx=ml+1;
+    cols.forEach(([h,w])=>{
+      doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...C.na);
+      doc.text(h, cx, y+4); cx+=w;
+    });
+    y+=7;
+
+    empresaRows.forEach((e,i)=>{
+      checkPage(8);
+      const audEmp = byEmp[e.emp];
+      const elemsPct=[1,2,3,4,5].map(j=>{
+        const vs=audEmp.map(a=>parseFloat(a[`pct_elem${j}`])).filter(v=>!isNaN(v));
+        return vs.length?Math.round(vs.reduce((s,v)=>s+v,0)/vs.length):null;
+      });
+      if(i%2===0){doc.setFillColor(250,250,252);doc.rect(ml,y,cw,7,'F');}
+      doc.setDrawColor(...C.border); doc.rect(ml,y,cw,7,'S');
+      cx=ml+1;
+      const rowVals=[''+(i+1), e.emp, ''+e.n, ...elemsPct.map(p=>p!==null?p+'%':'N/A'), (e.pct??'—')+'%'];
+      rowVals.forEach((v,vi)=>{
+        const col=cols[vi];
+        const color = vi===8 ? [getPctColor(e.pct)[0],getPctColor(e.pct)[1],getPctColor(e.pct)[2]] : C.dark;
+        doc.setFont('helvetica', vi===1||vi===8?'bold':'normal');
+        doc.setFontSize(vi===1?7:7.5); doc.setTextColor(...color);
+        const txt = vi===1 ? doc.splitTextToSize(v, col[1]-2)[0] : v;
+        doc.text(txt, cx, y+4.8); cx+=col[1];
+      });
+      y+=7;
+    });
+
+    // DETALLE CON FOTOS POR AUDITORÍA
+    doc.addPage(); y=15;
+    doc.setFillColor(...C.dark); doc.rect(0,0,pw,18,'F');
+    doc.setFillColor(...C.red); doc.rect(0,0,5,18,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...C.white);
+    doc.text('DETALLE DE VERIFICACIONES CON EVIDENCIA FOTOGRÁFICA', ml+6, 12);
+    y=24;
+
+    reporteData.slice().reverse().forEach(a => {
+      checkPage(25);
+      const pct = parseFloat(a.pct_general);
+      const pc  = [getPctColor(pct)].flat();
+
+      // Auditoría mini-header
+      doc.setFillColor(...pc); doc.rect(ml,y,cw,7,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+      doc.text(`${a.empresa||'—'}  |  ${a.fecha||''}  |  Auditor: ${a.auditor||'—'}  |  ${!isNaN(pct)?pct+'%':'—'}`, ml+3, y+5);
+      y+=9;
+
+      // Datos básicos
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.dark);
+      doc.text(`Trabajo: ${a.nombre_trabajo||'—'}  |  Sup. Operativo: ${a.sup_operativo||'—'}  |  Sup. SHE: ${a.sup_she||'—'}`, ml+3, y+4);
+      y+=7;
+
+      // Fotos en fila
+      const fotos = parseFotos(a);
+      if (fotos.length>0) {
+        const fW=38, fH=29, gap=3;
+        let fx=ml+3, fy=y;
+        fotos.forEach((f,fi)=>{
+          if(fx+fW>pw-mr){ fx=ml+3; fy+=fH+6; y=fy; checkPage(fH+10); }
+          try {
+            doc.setDrawColor(...C.border); doc.rect(fx,fy,fW,fH,'S');
+            doc.addImage(f,'JPEG',fx+0.5,fy+0.5,fW-1,fH-1);
+            doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(...C.na);
+            doc.text(`Foto ${fi+1}`, fx+fW/2, fy+fH+3, {align:'center'});
+          } catch(e){}
+          fx+=fW+gap;
+        });
+        y = fy+fH+8;
+      }
+      y+=4;
+    });
+
+    // Footer todas las páginas
+    const totalPages = doc.internal.getNumberOfPages();
+    for(let i=1;i<=totalPages;i++){
+      doc.setPage(i);
+      doc.setFillColor(245,245,245); doc.rect(0,287,pw,10,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(150,150,150);
+      doc.text(`Anglo American Quellaveco S.A. — Reporte ${meses[mes]} ${anio} | ${empFiltro||'Todas las empresas'}`, ml, 292);
+      doc.text(`Pág. ${i}/${totalPages}`, pw-mr, 292, {align:'right'});
+    }
+
+    const blob = doc.output('blob');
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `AAQ_Reporte_${anio}_${String(mes).padStart(2,'0')}${empFiltro?'_'+empFiltro.replace(/\s+/g,'_'):''}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(err) {
+    console.error(err);
+    alert('Error al generar PDF: '+err.message);
+  }
+  hideSpinner();
 }
 
 async function exportarExcel() {
   if (!reporteData.length) { alert('Genera primero el reporte antes de exportar.'); return; }
-
   const wb = XLSX.utils.book_new();
   const wsData = [
     ['Empresa','Fecha','Trabajo','Auditor','E1 Sup.Op','E2 Personal','E3 Sup.SHE','E4 Recursos','E5 Ambiental','General'],
-    ...reporteData.map(a => [
-      a.empresa, a.fecha, a.nombre_trabajo, a.auditor,
-      a.pct_elem1, a.pct_elem2, a.pct_elem3, a.pct_elem4, a.pct_elem5, a.pct_general
-    ])
+    ...reporteData.map(a=>[a.empresa,a.fecha,a.nombre_trabajo,a.auditor,a.pct_elem1,a.pct_elem2,a.pct_elem3,a.pct_elem4,a.pct_elem5,a.pct_general])
   ];
-
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
-
-  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const buf = XLSX.write(wb, {bookType:'xlsx',type:'array'});
+  const blob = new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `AAQ_Reporte_${document.getElementById('reporte-anio').value}_${document.getElementById('reporte-mes').value}.xlsx`;
-  a.click();
-  URL.revokeObjectURL(url);
+  a.href=url; a.download=`AAQ_Reporte_${document.getElementById('reporte-anio').value}_${document.getElementById('reporte-mes').value}.xlsx`;
+  a.click(); URL.revokeObjectURL(url);
 }
 
 // ══════════════════════════════════════════════
@@ -1280,6 +1617,7 @@ function renderAuditores() {
       <td>${a.dni}</td>
       <td>${a.area || '—'}</td>
       <td>${a.whatsapp || '—'}</td>
+      <td>${a.email || '—'}</td>
       <td><span class="badge ${a.activo === 'false' ? 'badge-blocked' : 'badge-active'}">${a.activo === 'false' ? '🚫 Bloqueado' : '✅ Activo'}</span></td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn-icon" onclick="editAuditor('${a.dni}')" title="Editar">✏️</button>
@@ -1295,7 +1633,7 @@ function renderAuditores() {
 function openModalAuditor(editData = null) {
   editingAuditorDni = null;
   document.getElementById('modal-auditor-title').textContent = 'Nuevo Auditor';
-  ['nombres','apellidos','dni','password','whatsapp','area'].forEach(f => {
+  ['nombres','apellidos','dni','password','whatsapp','email','area'].forEach(f => {
     document.getElementById(`aud-${f}`).value = editData?.[f] || '';
   });
   if (editData) {
@@ -1328,6 +1666,7 @@ async function guardarAuditor() {
     apellidos,
     password,
     whatsapp: document.getElementById('aud-whatsapp').value.trim(),
+    email: document.getElementById('aud-email').value.trim(),
     area: document.getElementById('aud-area').value.trim(),
     activo: 'true',
     created: new Date().toISOString()
