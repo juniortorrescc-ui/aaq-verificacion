@@ -1577,7 +1577,9 @@ async function enviarVerificacion() {
       firma_sup_she: firmaShe
     };
 
-    // Añadir cada foto en su propia columna
+    // Guardar fotos: columna "fotos" como JSON array (columna única en Sheets)
+    // Y también foto_1, foto_2... por compatibilidad
+    rowData['fotos'] = JSON.stringify(todasLasFotos);
     todasLasFotos.forEach((b64, i) => { rowData[`foto_${i + 1}`] = b64; });
 
     await fetch(`${CONFIG.SHEETBEST_URL}/tabs/auditorias`, {
