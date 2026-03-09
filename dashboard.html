@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Anglo American Quellaveco</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap');
+
+  :root {
+    --aaq-red: #C0392B;
+    --aaq-red-dark: #8B1A1A;
+    --aaq-dark: #1A1A2E;
+    --aaq-gold: #D4A017;
+    --aaq-light: #F8F9FA;
+    --aaq-white: #FFFFFF;
+    --aaq-gray: #6B7280;
+    --aaq-border: #E5E7EB;
+    --cumple: #16A34A;
+    --ep: #D97706;
+    --nc: #DC2626;
+    --na: #6B7280;
+    --sidebar-w: 220px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--aaq-light);
+    color: #1F2937;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ═══ SIDEBAR ═══ */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--aaq-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    z-index: 50;
+    transition: transform 0.3s;
+  }
+
+  .sidebar-brand {
+    padding: 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-diamond {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--aaq-red), #8B1A1A);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-diamond span { color: white; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; }
+
+  .brand-text { flex: 1; min-width: 0; }
+  .brand-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 14px; color: white; letter-spacing: 0.5px; }
+  .brand-sub { font-size: 9px; color: var(--aaq-gold); letter-spacing: 2px; font-weight: 600; }
+
+  .nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+
+  .nav-section { padding: 8px 16px 4px; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.3); letter-spacing: 2px; text-transform: uppercase; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    margin: 1px 0;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+  .nav-item.active { background: rgba(192,57,43,0.2); color: white; border-left-color: var(--aaq-red); }
+  .nav-item .icon { font-size: 16px; flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .btn-logout {
+    width: 100%;
+    padding: 9px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover { background: rgba(220,38,38,0.2); color: white; border-color: rgba(220,38,38,0.3); }
+
+  /* ═══ MAIN ═══ */
+  .main-content {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: white;
+    border-bottom: 1px solid var(--aaq-border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .page-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--aaq-dark);
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .admin-badge {
+    background: rgba(192,57,43,0.1);
+    border: 1px solid rgba(192,57,43,0.2);
+    color: var(--aaq-red);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .content { padding: 24px; flex: 1; }
+
+  /* ═══ VIEWS ═══ */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ═══ KPI CARDS ═══ */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid var(--aaq-border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--aaq-red), var(--aaq-gold));
+  }
+
+  .kpi-icon { font-size: 26px; margin-bottom: 10px; }
+  .kpi-value { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 36px; color: var(--aaq-dark); line-height: 1; }
+  .kpi-label { font-size: 12px; color: var(--aaq-gray); margin-top: 4px; font-weight: 500; }
+  .kpi-sub { font-size: 11px; color: var(--aaq-red); margin-top: 6px; font-weight: 600; }
+
+  /* ═══ SECTION CARDS ═══ */
+  .section-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--aaq-border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--aaq-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--aaq-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-body { padding: 20px; }
+
+  /* ═══ CHARTS ═══ */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+
+  canvas { max-width: 100%; }
+
+  /* ═══ EMPRESA TABLE ═══ */
+  .ranking-table { width: 100%; border-collapse: collapse; }
+  .ranking-table th {
+    background: var(--aaq-light);
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--aaq-gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+    border-bottom: 1px solid var(--aaq-border);
+  }
+
+  .ranking-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #F9FAFB;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+
+  .ranking-table tr:hover td { background: #F9FAFB; cursor: pointer; }
+  .ranking-table tr:last-child td { border-bottom: none; }
+
+  .pct-bar-cell { display: flex; align-items: center; gap: 10px; }
+  .pct-bar-track { flex: 1; height: 8px; background: #E5E7EB; border-radius: 99px; overflow: hidden; }
+  .pct-bar-fill { height: 100%; border-radius: 99px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .badge-green { background: #DCFCE7; color: #16A34A; }
+  .badge-orange { background: #FEF3C7; color: #D97706; }
+  .badge-red { background: #FEE2E2; color: #DC2626; }
+  .badge-gray { background: #F3F4F6; color: #6B7280; }
+  .badge-active { background: #DCFCE7; color: #16A34A; }
+  .badge-blocked { background: #FEE2E2; color: #DC2626; }
+
+  /* ═══ AUDITORES TABLE ═══ */
+  .form-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .form-inline { grid-template-columns: 1fr; } }
+
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 11px; font-weight: 700; color: var(--aaq-gray); text-transform: uppercase; letter-spacing: 1px; }
+  .form-group input, .form-group select {
+    padding: 9px 12px;
+    border: 1px solid var(--aaq-border);
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    background: white;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--aaq-red); }
+
+  .btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: var(--aaq-red); color: white; }
+  .btn-primary:hover { background: var(--aaq-red-dark); }
+  .btn-secondary { background: var(--aaq-light); color: var(--aaq-dark); border: 1px solid var(--aaq-border); }
+  .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 6px; }
+  .btn-icon { background: none; border: 1px solid var(--aaq-border); padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+  .btn-icon:hover { background: var(--aaq-light); }
+
+  /* ═══ MODAL ═══ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.active { display: flex !important; }
+
+  .modal {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 520px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .modal-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--aaq-gray); }
+
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ═══ HISTORIAL GRID ═══ */
+  .historial-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+  .auditoria-card {
+    background: white;
+    border: 1px solid var(--aaq-border);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+
+  .auditoria-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); border-color: var(--aaq-red); }
+
+  .auditoria-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .auditoria-empresa { font-weight: 700; font-size: 14px; }
+  .auditoria-fecha { font-size: 11px; color: var(--aaq-gray); }
+  .auditoria-trabajo { font-size: 12px; color: var(--aaq-gray); margin-bottom: 10px; }
+
+  .auditoria-pcts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pct-mini { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+
+  .fotos-mini { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+  .foto-mini { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; border: 1px solid var(--aaq-border); cursor: pointer; }
+
+  /* ═══ REPORTE MENSUAL ═══ */
+  .reporte-filters { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+  .reporte-filters .form-group { flex: none; }
+
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--aaq-gray); font-size: 14px; }
+
+  /* ═══ SPINNER ═══ */
+  .spinner-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 99999;
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+  }
+  .spinner-overlay.show { display: flex !important; }
+  .spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,0.2); border-top-color: var(--aaq-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-text { color: white; font-size: 14px; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; }
+  }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--aaq-gray); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-diamond"><span>AA</span></div>
+    <div class="brand-text">
+      <div class="brand-name">QUELLAVECO</div>
+      <div class="brand-sub">ADMINISTRADOR</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="showView('overview')" id="nav-overview">
+      <span class="icon">📊</span> Vista General
+    </div>
+    <div class="nav-item" onclick="showView('historial')" id="nav-historial">
+      <span class="icon">📋</span> Historial
+    </div>
+
+    <div class="nav-section">Análisis</div>
+    <div class="nav-item" onclick="showView('empresas')" id="nav-empresas">
+      <span class="icon">🏢</span> Por Empresa
+    </div>
+    <div class="nav-item" onclick="showView('reporte')" id="nav-reporte">
+      <span class="icon">📅</span> Reporte Mensual
+    </div>
+
+    <div class="nav-section">Gestión</div>
+    <div class="nav-item" onclick="showView('auditores')" id="nav-auditores">
+      <span class="icon">👷</span> Auditores
+    </div>
+    <div class="nav-item" onclick="showView('emp-admin')" id="nav-emp-admin">
+      <span class="icon">⚙️</span> Empresas
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="logout()">🚪 Cerrar Sesión</button>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button onclick="document.getElementById('sidebar').classList.toggle('open')"
+        style="display:none;background:none;border:none;font-size:22px;cursor:pointer" id="menu-btn">☰</button>
+      <div class="page-title" id="page-title">Vista General</div>
+    </div>
+    <div class="topbar-right">
+      <span class="admin-badge">🔐 ADMINISTRADOR</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <div class="view active" id="view-overview">
+      <div class="kpi-grid" id="kpi-overview"></div>
+      <div class="charts-grid">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">📊 Cumplimiento por Empresa</div>
+          </div>
+          <div class="section-body">
+            <canvas id="chart-empresas" height="220"></canvas>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">🕸 Promedio por Elemento</div>
+          </div>
+          <div class="section-body">
+            <canvas id="chart-radar" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">📈 Evolución Temporal</div>
+        </div>
+        <div class="section-body">
+          <canvas id="chart-linea" height="120"></canvas>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">🏆 Ranking de Empresas</div>
+        </div>
+        <div class="section-body" style="padding:0">
+          <table class="ranking-table" id="ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Empresa</th>
+                <th>Verificaciones</th>
+                <th>Cumplimiento</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="ranking-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ HISTORIAL ═══ -->
+    <div class="view" id="view-historial">
+      <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="historial-search" placeholder="🔍 Buscar empresa, auditor, trabajo..."
+          style="flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px;outline:none"
+          oninput="filterHistorial()">
+        <select id="historial-filter-empresa"
+          style="padding:9px 14px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px;outline:none"
+          onchange="filterHistorial()">
+          <option value="">Todas las empresas</option>
+        </select>
+      </div>
+      <div class="historial-grid" id="historial-grid">
+        <div class="loading">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ═══ EMPRESAS ═══ -->
+    <div class="view" id="view-empresas">
+      <div class="section-card" style="margin-bottom:16px">
+        <div class="section-header">
+          <div class="section-title">🏢 Seleccionar Empresa</div>
+        </div>
+        <div class="section-body">
+          <select id="empresa-select" style="padding:9px 14px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px;width:100%;outline:none" onchange="loadEmpresaDetail()">
+            <option value="">— Seleccionar empresa —</option>
+          </select>
+        </div>
+      </div>
+      <div id="empresa-detail" style="display:none">
+        <div class="kpi-grid" id="kpi-empresa"></div>
+        <div class="charts-grid">
+          <div class="section-card">
+            <div class="section-header"><div class="section-title">📈 Evolución de Cumplimiento</div></div>
+            <div class="section-body"><canvas id="chart-emp-linea" height="200"></canvas></div>
+          </div>
+          <div class="section-card">
+            <div class="section-header"><div class="section-title">📊 Por Elemento</div></div>
+            <div class="section-body"><canvas id="chart-emp-barra" height="200"></canvas></div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-header"><div class="section-title">📋 Historial de Verificaciones</div></div>
+          <div class="section-body" style="padding:0">
+            <table class="ranking-table" id="emp-historial-table">
+              <thead>
+                <tr><th>Fecha</th><th>Trabajo</th><th>Auditor</th><th>E1</th><th>E2</th><th>E3</th><th>E4</th><th>E5</th><th>General</th></tr>
+              </thead>
+              <tbody id="emp-historial-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ REPORTE MENSUAL ═══ -->
+    <div class="view" id="view-reporte">
+      <div class="reporte-filters">
+        <div class="form-group">
+          <label>Mes</label>
+          <select id="reporte-mes" style="padding:9px 12px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px">
+            <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+            <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+            <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Año</label>
+          <input type="number" id="reporte-anio" value="2025" min="2024" style="padding:9px 12px;border:1px solid var(--aaq-border);border-radius:8px;font-family:Barlow,sans-serif;font-size:13px;width:90px">
+        </div>
+        <button class="btn btn-primary" onclick="loadReporte()">Generar Reporte</button>
+        <button class="btn btn-secondary" onclick="exportarExcel()">⬇ Excel</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨 PDF</button>
+      </div>
+      <div id="reporte-content">
+        <div class="empty-state"><div class="icon">📅</div><p>Selecciona mes y año para generar el reporte.</p></div>
+      </div>
+    </div>
+
+    <!-- ═══ AUDITORES ═══ -->
+    <div class="view" id="view-auditores">
+      <div class="kpi-grid" id="kpi-auditores"></div>
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">👷 Gestión de Auditores</div>
+          <button class="btn btn-primary btn-sm" onclick="openModalAuditor()">+ Nuevo Auditor</button>
+        </div>
+        <div class="section-body" style="padding:0">
+          <table class="ranking-table" id="auditores-table">
+            <thead>
+              <tr><th>Nombre</th><th>DNI</th><th>Área</th><th>WhatsApp</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="auditores-body">
+              <tr><td colspan="6" class="loading">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ EMPRESAS ADMIN ═══ -->
+    <div class="view" id="view-emp-admin">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">⚙️ Gestión de Empresas</div>
+          <button class="btn btn-primary btn-sm" onclick="openModalEmpresa()">+ Nueva Empresa</button>
+        </div>
+        <div class="section-body" style="padding:0">
+          <table class="ranking-table" id="empresas-admin-table">
+            <thead>
+              <tr><th>Empresa</th><th>RUC</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="empresas-admin-body">
+              <tr><td colspan="4" class="loading">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main-content -->
+
+<!-- MODAL AUDITOR -->
+<div class="modal-overlay" id="modal-auditor">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-auditor-title">Nuevo Auditor</div>
+      <button class="modal-close" onclick="closeModal('modal-auditor')">✕</button>
+    </div>
+    <div class="form-inline">
+      <div class="form-group">
+        <label>Nombres *</label>
+        <input type="text" id="aud-nombres" placeholder="Nombres">
+      </div>
+      <div class="form-group">
+        <label>Apellidos *</label>
+        <input type="text" id="aud-apellidos" placeholder="Apellidos">
+      </div>
+      <div class="form-group">
+        <label>DNI *</label>
+        <input type="text" id="aud-dni" placeholder="12345678" maxlength="8">
+      </div>
+      <div class="form-group">
+        <label>Contraseña *</label>
+        <input type="text" id="aud-password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp (con código país)</label>
+        <input type="text" id="aud-whatsapp" placeholder="+51987654321">
+      </div>
+      <div class="form-group">
+        <label>Área</label>
+        <input type="text" id="aud-area" placeholder="Ej: SHE, Operaciones">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-auditor')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarAuditor()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EMPRESA -->
+<div class="modal-overlay" id="modal-empresa">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nueva Empresa</div>
+      <button class="modal-close" onclick="closeModal('modal-empresa')">✕</button>
+    </div>
+    <div class="form-inline">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Nombre de la Empresa *</label>
+        <input type="text" id="emp-nombre" placeholder="Razón social">
+      </div>
+      <div class="form-group">
+        <label>RUC</label>
+        <input type="text" id="emp-ruc" placeholder="20xxxxxxxxx" maxlength="11">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-empresa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEmpresa()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SPINNER -->
+<div class="spinner-overlay" id="spinner">
+  <div class="spinner"></div>
+  <div class="spinner-text" id="spinner-text">Cargando...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+const CONFIG = {
+  SHEETBEST_URL: 'https://api.sheetbest.com/sheets/TU-ID-AQUI'
+};
+
+let allAuditorias = [];
+let allAuditores = [];
+let allEmpresas = [];
+let editingAuditorDni = null;
+const charts = {};
+
+// ══════════════════════════════════════════════
+// SESSION & ROUTING
+// ══════════════════════════════════════════════
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('aaq_session') || localStorage.getItem('aaq_session') || 'null'); }
+  catch(e) { return null; }
+}
+
+function logout() {
+  localStorage.removeItem('aaq_session');
+  sessionStorage.removeItem('aaq_session');
+  window.location.href = 'login.html';
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+async function init() {
+  const session = getSession();
+  if (!session || session.role !== 'admin') {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  showSpinner('Cargando datos...');
+  try {
+    await Promise.all([loadAuditorias(), loadAuditores(), loadEmpresas()]);
+    renderOverview();
+    renderHistorial();
+    populateEmpresaSelect();
+    renderAuditores();
+    renderEmpresasAdmin();
+  } catch(err) {
+    console.error(err);
+  }
+  hideSpinner();
+}
+
+// ══════════════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════════════
+async function loadAuditorias() {
+  const res = await fetch(`${CONFIG.SHEETBEST_URL}/tabs/auditorias`);
+  allAuditorias = await res.json();
+}
+
+async function loadAuditores() {
+  const res = await fetch(`${CONFIG.SHEETBEST_URL}/tabs/usuarios`);
+  allAuditores = await res.json();
+}
+
+async function loadEmpresas() {
+  try {
+    const res = await fetch(`${CONFIG.SHEETBEST_URL}/tabs/empresas`);
+    allEmpresas = await res.json();
+  } catch(e) { allEmpresas = []; }
+}
+
+// ══════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════
+const viewTitles = {
+  overview: 'Vista General',
+  historial: 'Historial de Verificaciones',
+  empresas: 'Análisis por Empresa',
+  reporte: 'Reporte Mensual',
+  auditores: 'Gestión de Auditores',
+  'emp-admin': 'Gestión de Empresas'
+};
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`view-${id}`).classList.add('active');
+  document.getElementById(`nav-${id}`).classList.add('active');
+  document.getElementById('page-title').textContent = viewTitles[id];
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════
+// OVERVIEW
+// ══════════════════════════════════════════════
+function getPctColor(pct) {
+  if (pct === null || pct === undefined || isNaN(pct)) return '#6B7280';
+  return pct >= 80 ? '#16A34A' : pct >= 50 ? '#D97706' : '#DC2626';
+}
+
+function getPctBadgeClass(pct) {
+  if (pct === null || isNaN(pct)) return 'badge-gray';
+  return pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
+}
+
+function avgPct(auditorias) {
+  const valid = auditorias.filter(a => a.pct_general !== undefined && a.pct_general !== '' && a.pct_general !== 'N/A');
+  if (!valid.length) return null;
+  return Math.round(valid.reduce((s, a) => s + parseFloat(a.pct_general), 0) / valid.length);
+}
+
+function renderOverview() {
+  const total = allAuditorias.length;
+  const prom = avgPct(allAuditorias);
+
+  // By empresa
+  const byEmpresa = {};
+  allAuditorias.forEach(a => {
+    if (!byEmpresa[a.empresa]) byEmpresa[a.empresa] = [];
+    byEmpresa[a.empresa].push(a);
+  });
+
+  const empresaPcts = Object.entries(byEmpresa).map(([emp, aud]) => ({ emp, pct: avgPct(aud), n: aud.length }));
+  empresaPcts.sort((a, b) => (b.pct || 0) - (a.pct || 0));
+
+  const best = empresaPcts[0];
+  const worst = empresaPcts[empresaPcts.length - 1];
+
+  // KPI Grid
+  document.getElementById('kpi-overview').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-value">${total}</div>
+      <div class="kpi-label">Total Verificaciones</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-value" style="color:${getPctColor(prom)}">${prom !== null ? prom + '%' : '—'}</div>
+      <div class="kpi-label">Promedio General</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">🏆</div>
+      <div class="kpi-value" style="font-size:20px;color:#16A34A">${best ? best.emp : '—'}</div>
+      <div class="kpi-label">Mejor Empresa</div>
+      <div class="kpi-sub">${best ? best.pct + '%' : ''}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-value" style="font-size:20px;color:#DC2626">${worst && worst !== best ? worst.emp : '—'}</div>
+      <div class="kpi-label">Requiere Atención</div>
+      <div class="kpi-sub">${worst && worst !== best ? worst.pct + '%' : ''}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">👷</div>
+      <div class="kpi-value">${allAuditores.length}</div>
+      <div class="kpi-label">Auditores Registrados</div>
+    </div>
+  `;
+
+  // Chart empresas
+  destroyChart('chart-empresas');
+  const ctxE = document.getElementById('chart-empresas').getContext('2d');
+  charts['chart-empresas'] = new Chart(ctxE, {
+    type: 'bar',
+    data: {
+      labels: empresaPcts.map(e => e.emp.length > 18 ? e.emp.slice(0,16)+'…' : e.emp),
+      datasets: [{
+        label: '% Cumplimiento',
+        data: empresaPcts.map(e => e.pct),
+        backgroundColor: empresaPcts.map(e => getPctColor(e.pct) + '99'),
+        borderColor: empresaPcts.map(e => getPctColor(e.pct)),
+        borderWidth: 2, borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+
+  // Radar por elemento
+  const elemNames = ['Sup. Operativo', 'Personal', 'Sup. SHE', 'Recursos', 'G. Ambiental'];
+  const elemAvgs = [1,2,3,4,5].map(i => {
+    const vals = allAuditorias.map(a => parseFloat(a[`pct_elem${i}`])).filter(v => !isNaN(v));
+    return vals.length ? Math.round(vals.reduce((s,v) => s+v, 0) / vals.length) : 0;
+  });
+
+  destroyChart('chart-radar');
+  const ctxR = document.getElementById('chart-radar').getContext('2d');
+  charts['chart-radar'] = new Chart(ctxR, {
+    type: 'radar',
+    data: {
+      labels: elemNames,
+      datasets: [{
+        label: 'Promedio %',
+        data: elemAvgs,
+        backgroundColor: 'rgba(192,57,43,0.15)',
+        borderColor: '#C0392B',
+        pointBackgroundColor: '#C0392B',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { r: { min: 0, max: 100, ticks: { display: false } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Line chart temporal
+  const sorted = [...allAuditorias].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  const lineLabels = sorted.map(a => a.fecha?.slice(5) || '');
+  const lineData = sorted.map(a => parseFloat(a.pct_general) || 0);
+
+  destroyChart('chart-linea');
+  const ctxL = document.getElementById('chart-linea').getContext('2d');
+  charts['chart-linea'] = new Chart(ctxL, {
+    type: 'line',
+    data: {
+      labels: lineLabels,
+      datasets: [{
+        label: '% Cumplimiento',
+        data: lineData,
+        borderColor: '#C0392B',
+        backgroundColor: 'rgba(192,57,43,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 4,
+        pointBackgroundColor: '#C0392B',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+    }
+  });
+
+  // Ranking table
+  const tbody = document.getElementById('ranking-body');
+  tbody.innerHTML = empresaPcts.map((e, i) => `
+    <tr onclick="drillEmpresa('${e.emp}')">
+      <td><strong>${i + 1}</strong></td>
+      <td><strong>${e.emp}</strong></td>
+      <td>${e.n}</td>
+      <td>
+        <div class="pct-bar-cell">
+          <div class="pct-bar-track">
+            <div class="pct-bar-fill" style="width:${e.pct || 0}%;background:${getPctColor(e.pct)}"></div>
+          </div>
+          <strong style="color:${getPctColor(e.pct)};width:40px;text-align:right">${e.pct !== null ? e.pct + '%' : '—'}</strong>
+        </div>
+      </td>
+      <td><span class="badge ${getPctBadgeClass(e.pct)}">${e.pct >= 80 ? '✅ Aceptable' : e.pct >= 50 ? '⚠️ En Proceso' : '❌ Crítico'}</span></td>
+    </tr>
+  `).join('');
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function drillEmpresa(emp) {
+  document.getElementById('empresa-select').value = emp;
+  showView('empresas');
+  loadEmpresaDetail();
+}
+
+// ══════════════════════════════════════════════
+// HISTORIAL
+// ══════════════════════════════════════════════
+function renderHistorial(data) {
+  const source = data || allAuditorias;
+  const grid = document.getElementById('historial-grid');
+
+  // Populate filter
+  const filterSel = document.getElementById('historial-filter-empresa');
+  if (filterSel.options.length <= 1) {
+    const empresas = [...new Set(allAuditorias.map(a => a.empresa))].sort();
+    empresas.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e; opt.textContent = e;
+      filterSel.appendChild(opt);
+    });
+  }
+
+  if (!source.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No hay verificaciones registradas.</p></div>';
+    return;
+  }
+
+  const sorted = [...source].sort((a, b) => new Date(b.timestamp || b.fecha) - new Date(a.timestamp || a.fecha));
+
+  grid.innerHTML = sorted.map(a => {
+    const pct = parseFloat(a.pct_general);
+    const fotos = parseFotos(a.fotos);
+
+    return `
+      <div class="auditoria-card">
+        <div class="auditoria-card-header">
+          <div>
+            <div class="auditoria-empresa">${a.empresa || '—'}</div>
+            <div class="auditoria-fecha">📅 ${a.fecha || ''} ${a.hora || ''}</div>
+          </div>
+          <span class="badge ${getPctBadgeClass(pct)}">${!isNaN(pct) ? pct + '%' : '—'}</span>
+        </div>
+        <div class="auditoria-trabajo">🔧 ${a.nombre_trabajo || '—'} | 👷 ${a.auditor || '—'}</div>
+        <div class="auditoria-pcts">
+          ${[1,2,3,4,5].map(i => {
+            const p = parseFloat(a[`pct_elem${i}`]);
+            return `<span class="pct-mini" style="background:${getPctColor(p)}22;color:${getPctColor(p)}">E${i}: ${!isNaN(p) ? p + '%' : 'N/A'}</span>`;
+          }).join('')}
+        </div>
+        ${fotos.length ? `<div class="fotos-mini">${fotos.slice(0,4).map(url => `<img src="${url}" class="foto-mini" onclick="window.open('${url}','_blank')" onerror="this.style.display='none'">`).join('')}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function parseFotos(fotosStr) {
+  if (!fotosStr) return [];
+  try {
+    const parsed = JSON.parse(fotosStr);
+    if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return Object.values(parsed).flat();
+    }
+    return Array.isArray(parsed) ? parsed : [];
+  } catch(e) { return []; }
+}
+
+function filterHistorial() {
+  const q = document.getElementById('historial-search').value.toLowerCase();
+  const emp = document.getElementById('historial-filter-empresa').value;
+  let filtered = allAuditorias;
+  if (q) filtered = filtered.filter(a =>
+    (a.empresa || '').toLowerCase().includes(q) ||
+    (a.auditor || '').toLowerCase().includes(q) ||
+    (a.nombre_trabajo || '').toLowerCase().includes(q)
+  );
+  if (emp) filtered = filtered.filter(a => a.empresa === emp);
+  renderHistorial(filtered);
+}
+
+// ══════════════════════════════════════════════
+// EMPRESA DETAIL
+// ══════════════════════════════════════════════
+function populateEmpresaSelect() {
+  const sel = document.getElementById('empresa-select');
+  const empresas = [...new Set(allAuditorias.map(a => a.empresa))].sort();
+  empresas.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e; opt.textContent = e;
+    sel.appendChild(opt);
+  });
+}
+
+function loadEmpresaDetail() {
+  const emp = document.getElementById('empresa-select').value;
+  if (!emp) { document.getElementById('empresa-detail').style.display = 'none'; return; }
+
+  document.getElementById('empresa-detail').style.display = 'block';
+
+  const data = allAuditorias.filter(a => a.empresa === emp);
+  const pct = avgPct(data);
+
+  document.getElementById('kpi-empresa').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-value">${data.length}</div>
+      <div class="kpi-label">Verificaciones</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-value" style="color:${getPctColor(pct)}">${pct !== null ? pct + '%' : '—'}</div>
+      <div class="kpi-label">Promedio General</div>
+    </div>
+  `;
+
+  // Line chart
+  const sorted = [...data].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+  destroyChart('chart-emp-linea');
+  const ctxL = document.getElementById('chart-emp-linea').getContext('2d');
+  charts['chart-emp-linea'] = new Chart(ctxL, {
+    type: 'line',
+    data: {
+      labels: sorted.map(a => a.fecha?.slice(5) || ''),
+      datasets: [{
+        label: '% General',
+        data: sorted.map(a => parseFloat(a.pct_general) || 0),
+        borderColor: '#C0392B', backgroundColor: 'rgba(192,57,43,0.1)',
+        borderWidth: 2, tension: 0.3, fill: true
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 } } }
+  });
+
+  // Barra por elemento
+  const elemNames = ['Sup. Operativo','Personal','Sup. SHE','Recursos','G. Ambiental'];
+  const elemAvgs = [1,2,3,4,5].map(i => {
+    const vals = data.map(a => parseFloat(a[`pct_elem${i}`])).filter(v => !isNaN(v));
+    return vals.length ? Math.round(vals.reduce((s,v) => s+v, 0) / vals.length) : 0;
+  });
+
+  destroyChart('chart-emp-barra');
+  const ctxB = document.getElementById('chart-emp-barra').getContext('2d');
+  charts['chart-emp-barra'] = new Chart(ctxB, {
+    type: 'bar',
+    data: {
+      labels: elemNames,
+      datasets: [{ label: '% Promedio', data: elemAvgs, backgroundColor: elemAvgs.map(p => getPctColor(p) + '99'), borderColor: elemAvgs.map(p => getPctColor(p)), borderWidth: 2, borderRadius: 6 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 } } }
+  });
+
+  // Historial table
+  document.getElementById('emp-historial-body').innerHTML = sorted.reverse().map(a => `
+    <tr>
+      <td>${a.fecha || '—'}</td>
+      <td>${a.nombre_trabajo || '—'}</td>
+      <td>${a.auditor || '—'}</td>
+      ${[1,2,3,4,5].map(i => {
+        const p = parseFloat(a[`pct_elem${i}`]);
+        return `<td><span class="badge ${getPctBadgeClass(p)}" style="font-size:10px">${!isNaN(p) ? p+'%' : 'N/A'}</span></td>`;
+      }).join('')}
+      <td><strong style="color:${getPctColor(parseFloat(a.pct_general))}">${a.pct_general || '—'}%</strong></td>
+    </tr>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════
+// REPORTE MENSUAL
+// ══════════════════════════════════════════════
+let reporteData = [];
+
+function loadReporte() {
+  const mes = parseInt(document.getElementById('reporte-mes').value);
+  const anio = parseInt(document.getElementById('reporte-anio').value);
+
+  reporteData = allAuditorias.filter(a => {
+    const d = new Date(a.fecha);
+    return d.getMonth() + 1 === mes && d.getFullYear() === anio;
+  });
+
+  const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  const container = document.getElementById('reporte-content');
+
+  if (!reporteData.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>No hay verificaciones en ${meses[mes]} ${anio}.</p></div>`;
+    return;
+  }
+
+  const byEmpresa = {};
+  reporteData.forEach(a => {
+    if (!byEmpresa[a.empresa]) byEmpresa[a.empresa] = [];
+    byEmpresa[a.empresa].push(a);
+  });
+
+  const empresaRows = Object.entries(byEmpresa).map(([emp, aud]) => {
+    const pct = avgPct(aud);
+    return { emp, pct, n: aud.length };
+  }).sort((a,b) => (b.pct||0) - (a.pct||0));
+
+  container.innerHTML = `
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">📅 Reporte: ${meses[mes]} ${anio}</div>
+      </div>
+      <div class="section-body">
+        <div class="kpi-grid" style="margin-bottom:16px">
+          <div class="kpi-card">
+            <div class="kpi-icon">📋</div>
+            <div class="kpi-value">${reporteData.length}</div>
+            <div class="kpi-label">Verificaciones del mes</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">📊</div>
+            <div class="kpi-value" style="color:${getPctColor(avgPct(reporteData))}">${avgPct(reporteData) || '—'}%</div>
+            <div class="kpi-label">Promedio mensual</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">🏢</div>
+            <div class="kpi-value">${Object.keys(byEmpresa).length}</div>
+            <div class="kpi-label">Empresas auditadas</div>
+          </div>
+        </div>
+        <table class="ranking-table">
+          <thead><tr><th>#</th><th>Empresa</th><th>Verificaciones</th><th>Promedio %</th><th>Estado</th></tr></thead>
+          <tbody>
+            ${empresaRows.map((e, i) => `
+              <tr>
+                <td><strong>${i+1}</strong></td>
+                <td><strong>${e.emp}</strong></td>
+                <td>${e.n}</td>
+                <td>
+                  <div class="pct-bar-cell">
+                    <div class="pct-bar-track">
+                      <div class="pct-bar-fill" style="width:${e.pct||0}%;background:${getPctColor(e.pct)}"></div>
+                    </div>
+                    <strong style="color:${getPctColor(e.pct)}">${e.pct !== null ? e.pct+'%' : '—'}</strong>
+                  </div>
+                </td>
+                <td><span class="badge ${getPctBadgeClass(e.pct)}">${e.pct >= 80 ? '✅ Aceptable' : e.pct >= 50 ? '⚠️ En Proceso' : '❌ Crítico'}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function exportarExcel() {
+  if (!reporteData.length) { alert('Genera primero el reporte antes de exportar.'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const wsData = [
+    ['Empresa','Fecha','Trabajo','Auditor','E1 Sup.Op','E2 Personal','E3 Sup.SHE','E4 Recursos','E5 Ambiental','General'],
+    ...reporteData.map(a => [
+      a.empresa, a.fecha, a.nombre_trabajo, a.auditor,
+      a.pct_elem1, a.pct_elem2, a.pct_elem3, a.pct_elem4, a.pct_elem5, a.pct_general
+    ])
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `AAQ_Reporte_${document.getElementById('reporte-anio').value}_${document.getElementById('reporte-mes').value}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════════
+// AUDITORES
+// ══════════════════════════════════════════════
+function renderAuditores() {
+  const activos = allAuditores.filter(a => a.activo !== 'false').length;
+
+  document.getElementById('kpi-auditores').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-icon">👷</div>
+      <div class="kpi-value">${allAuditores.length}</div>
+      <div class="kpi-label">Total Auditores</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-value" style="color:#16A34A">${activos}</div>
+      <div class="kpi-label">Activos</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">🚫</div>
+      <div class="kpi-value" style="color:#DC2626">${allAuditores.length - activos}</div>
+      <div class="kpi-label">Bloqueados</div>
+    </div>
+  `;
+
+  document.getElementById('auditores-body').innerHTML = allAuditores.map(a => `
+    <tr>
+      <td><strong>${a.nombres} ${a.apellidos}</strong></td>
+      <td>${a.dni}</td>
+      <td>${a.area || '—'}</td>
+      <td>${a.whatsapp || '—'}</td>
+      <td><span class="badge ${a.activo === 'false' ? 'badge-blocked' : 'badge-active'}">${a.activo === 'false' ? '🚫 Bloqueado' : '✅ Activo'}</span></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-icon" onclick="editAuditor('${a.dni}')" title="Editar">✏️</button>
+        <button class="btn-icon" onclick="toggleAuditor('${a.dni}', '${a.activo}')" title="${a.activo === 'false' ? 'Activar' : 'Bloquear'}">
+          ${a.activo === 'false' ? '✅' : '🚫'}
+        </button>
+        <button class="btn-icon" onclick="resetPassword('${a.dni}')" title="Reset contraseña">🔑</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModalAuditor(editData = null) {
+  editingAuditorDni = null;
+  document.getElementById('modal-auditor-title').textContent = 'Nuevo Auditor';
+  ['nombres','apellidos','dni','password','whatsapp','area'].forEach(f => {
+    document.getElementById(`aud-${f}`).value = editData?.[f] || '';
+  });
+  if (editData) {
+    editingAuditorDni = editData.dni;
+    document.getElementById('modal-auditor-title').textContent = 'Editar Auditor';
+  }
+  document.getElementById('modal-auditor').classList.add('active');
+}
+
+function editAuditor(dni) {
+  const aud = allAuditores.find(a => a.dni === dni);
+  if (aud) openModalAuditor(aud);
+}
+
+async function guardarAuditor() {
+  const nombres = document.getElementById('aud-nombres').value.trim();
+  const apellidos = document.getElementById('aud-apellidos').value.trim();
+  const dni = document.getElementById('aud-dni').value.trim();
+  const password = document.getElementById('aud-password').value.trim();
+
+  if (!nombres || !apellidos || !dni || !password) {
+    alert('Completa los campos obligatorios (*)'); return;
+  }
+
+  showSpinner('Guardando auditor...');
+
+  const data = {
+    dni,
+    nombres,
+    apellidos,
+    password,
+    whatsapp: document.getElementById('aud-whatsapp').value.trim(),
+    area: document.getElementById('aud-area').value.trim(),
+    activo: 'true',
+    created: new Date().toISOString()
+  };
+
+  try {
+    if (editingAuditorDni) {
+      await fetch(`${CONFIG.SHEETBEST_URL}/tabs/usuarios/dni/${editingAuditorDni}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const idx = allAuditores.findIndex(a => a.dni === editingAuditorDni);
+      if (idx !== -1) allAuditores[idx] = data;
+    } else {
+      await fetch(`${CONFIG.SHEETBEST_URL}/tabs/usuarios`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      allAuditores.push(data);
+    }
+    closeModal('modal-auditor');
+    renderAuditores();
+  } catch(err) {
+    alert('Error al guardar. Intenta de nuevo.');
+  }
+  hideSpinner();
+}
+
+async function toggleAuditor(dni, activo) {
+  const newActivo = activo === 'false' ? 'true' : 'false';
+  const confirmMsg = newActivo === 'false' ? '¿Bloquear este auditor?' : '¿Activar este auditor?';
+  if (!confirm(confirmMsg)) return;
+
+  showSpinner('Actualizando...');
+  try {
+    await fetch(`${CONFIG.SHEETBEST_URL}/tabs/usuarios/dni/${dni}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activo: newActivo })
+    });
+    const aud = allAuditores.find(a => a.dni === dni);
+    if (aud) aud.activo = newActivo;
+    renderAuditores();
+  } catch(err) { alert('Error al actualizar.'); }
+  hideSpinner();
+}
+
+async function resetPassword(dni) {
+  if (!confirm(`¿Resetear la contraseña al DNI (${dni})?`)) return;
+  showSpinner('Reseteando contraseña...');
+  try {
+    await fetch(`${CONFIG.SHEETBEST_URL}/tabs/usuarios/dni/${dni}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: dni })
+    });
+    const aud = allAuditores.find(a => a.dni === dni);
+    if (aud) aud.password = dni;
+    alert(`Contraseña reseteada. Nueva contraseña: ${dni}`);
+  } catch(err) { alert('Error al resetear.'); }
+  hideSpinner();
+}
+
+// ══════════════════════════════════════════════
+// EMPRESAS ADMIN
+// ══════════════════════════════════════════════
+function renderEmpresasAdmin() {
+  document.getElementById('empresas-admin-body').innerHTML = allEmpresas.map(e => `
+    <tr>
+      <td><strong>${e.nombre}</strong></td>
+      <td>${e.ruc || '—'}</td>
+      <td><span class="badge ${e.activo === 'false' ? 'badge-blocked' : 'badge-active'}">${e.activo === 'false' ? '🚫 Inactiva' : '✅ Activa'}</span></td>
+      <td>
+        <button class="btn-icon" onclick="toggleEmpresa('${e.id || e.nombre}', '${e.activo}')">${e.activo === 'false' ? '✅ Activar' : '🚫 Desactivar'}</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModalEmpresa() {
+  document.getElementById('emp-nombre').value = '';
+  document.getElementById('emp-ruc').value = '';
+  document.getElementById('modal-empresa').classList.add('active');
+}
+
+async function guardarEmpresa() {
+  const nombre = document.getElementById('emp-nombre').value.trim();
+  if (!nombre) { alert('Ingresa el nombre de la empresa.'); return; }
+
+  showSpinner('Guardando empresa...');
+  const data = { nombre, ruc: document.getElementById('emp-ruc').value.trim(), activo: 'true', id: Date.now().toString() };
+
+  try {
+    await fetch(`${CONFIG.SHEETBEST_URL}/tabs/empresas`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    allEmpresas.push(data);
+    closeModal('modal-empresa');
+    renderEmpresasAdmin();
+  } catch(err) { alert('Error al guardar.'); }
+  hideSpinner();
+}
+
+async function toggleEmpresa(id, activo) {
+  const newActivo = activo === 'false' ? 'true' : 'false';
+  showSpinner('Actualizando...');
+  try {
+    await fetch(`${CONFIG.SHEETBEST_URL}/tabs/empresas/id/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activo: newActivo })
+    });
+    const emp = allEmpresas.find(e => (e.id || e.nombre) === id);
+    if (emp) emp.activo = newActivo;
+    renderEmpresasAdmin();
+  } catch(err) { alert('Error al actualizar.'); }
+  hideSpinner();
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function showSpinner(t) { document.getElementById('spinner-text').textContent = t; document.getElementById('spinner').classList.add('show'); }
+function hideSpinner() { document.getElementById('spinner').classList.remove('show'); }
+
+// Responsive sidebar toggle
+if (window.innerWidth <= 768) {
+  document.getElementById('menu-btn').style.display = 'block';
+}
+
+// ══════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>

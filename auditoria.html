@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Verificación — Anglo American Quellaveco</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap');
+
+  :root {
+    --aaq-red: #C0392B;
+    --aaq-red-dark: #8B1A1A;
+    --aaq-dark: #1A1A2E;
+    --aaq-gold: #D4A017;
+    --aaq-light: #F8F9FA;
+    --aaq-white: #FFFFFF;
+    --aaq-gray: #6B7280;
+    --aaq-border: #E5E7EB;
+    --cumple: #16A34A;
+    --cumple-bg: #DCFCE7;
+    --ep: #D97706;
+    --ep-bg: #FEF3C7;
+    --nc: #DC2626;
+    --nc-bg: #FEE2E2;
+    --na: #6B7280;
+    --na-bg: #F3F4F6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--aaq-light);
+    color: #1F2937;
+    padding-bottom: 100px;
+  }
+
+  /* ═══ TOP BAR ═══ */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--aaq-dark);
+    padding: 0 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-sm {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, var(--aaq-red), #8B1A1A);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    flex-shrink: 0;
+  }
+
+  .topbar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: white;
+    letter-spacing: 0.5px;
+  }
+
+  .topbar-title span {
+    display: block;
+    font-size: 10px;
+    color: var(--aaq-gold);
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+
+  .btn-logout {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover { background: rgba(255,255,255,0.15); color: white; }
+
+  /* ═══ PROGRESS BAR ═══ */
+  .progress-sticky {
+    position: sticky;
+    top: 52px;
+    z-index: 99;
+    background: white;
+    border-bottom: 1px solid var(--aaq-border);
+    padding: 10px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .progress-inner {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .progress-text { font-size: 12px; color: var(--aaq-gray); font-weight: 500; }
+  .progress-pct { font-size: 13px; font-weight: 700; color: var(--aaq-red); }
+
+  .progress-bar-track {
+    height: 6px;
+    background: #E5E7EB;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--aaq-red), var(--aaq-gold));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ═══ MAIN CONTENT ═══ */
+  .main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  /* ═══ HEADER INFO ═══ */
+  .header-card {
+    background: linear-gradient(135deg, var(--aaq-dark) 0%, #16213E 100%);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header-card::after {
+    content: 'AAQSA';
+    position: absolute;
+    right: -10px;
+    bottom: -15px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 80px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.04);
+    letter-spacing: -3px;
+    pointer-events: none;
+  }
+
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    color: var(--aaq-gold);
+  }
+
+  .header-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 500px) {
+    .header-grid { grid-template-columns: 1fr; }
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field-group label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .field-group input, .field-group select {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: white;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+    width: 100%;
+  }
+
+  .field-group input:focus, .field-group select:focus {
+    border-color: var(--aaq-gold);
+    background: rgba(212,160,23,0.1);
+  }
+
+  .field-group input::placeholder { color: rgba(255,255,255,0.25); }
+
+  .field-group select option { background: #1A1A2E; color: white; }
+
+  .auditor-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(192,57,43,0.2);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+
+  .auditor-badge .icon { font-size: 18px; }
+  .auditor-badge .info { font-size: 12px; color: rgba(255,255,255,0.6); }
+  .auditor-badge .name { font-size: 14px; font-weight: 700; color: white; }
+
+  /* ═══ ELEMENTO SECTION ═══ */
+  .elemento-section {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--aaq-border);
+  }
+
+  .elemento-header {
+    background: linear-gradient(135deg, var(--aaq-dark), #16213E);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .elemento-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .elemento-num {
+    width: 36px; height: 36px;
+    background: var(--aaq-red);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .elemento-title-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: white;
+    letter-spacing: 0.5px;
+  }
+
+  .elemento-stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .pct-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--aaq-gold);
+  }
+
+  .chevron {
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    transition: transform 0.3s;
+  }
+
+  .elemento-body { padding: 0; }
+  .elemento-body.collapsed { display: none; }
+
+  /* ═══ CRITERIO SUBTITULO ═══ */
+  .criterio-group { border-bottom: 1px solid #F3F4F6; }
+  .criterio-group:last-child { border-bottom: none; }
+
+  .criterio-subtitulo {
+    background: #F8F9FA;
+    padding: 10px 18px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--aaq-red);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid var(--aaq-border);
+  }
+
+  /* ═══ ITEM ═══ */
+  .item-card {
+    padding: 14px 18px;
+    border-bottom: 1px solid #F3F4F6;
+  }
+
+  .item-card:last-child { border-bottom: none; }
+
+  .item-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .item-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--aaq-gray);
+    flex-shrink: 0;
+    margin-top: 1px;
+    min-width: 36px;
+  }
+
+  .item-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #374151;
+    flex: 1;
+  }
+
+  /* ═══ CALIFICACIÓN BUTTONS ═══ */
+  .calificacion-group {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 400px) {
+    .calificacion-group { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .cal-btn {
+    padding: 8px 4px;
+    border: 2px solid var(--aaq-border);
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--aaq-gray);
+    letter-spacing: 0.3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cal-btn .cal-icon { font-size: 16px; }
+
+  .cal-btn:hover { transform: translateY(-1px); }
+
+  .cal-btn.selected-C {
+    border-color: var(--cumple);
+    background: var(--cumple-bg);
+    color: var(--cumple);
+    box-shadow: 0 2px 8px rgba(22,163,74,0.2);
+  }
+
+  .cal-btn.selected-EP {
+    border-color: var(--ep);
+    background: var(--ep-bg);
+    color: var(--ep);
+    box-shadow: 0 2px 8px rgba(217,119,6,0.2);
+  }
+
+  .cal-btn.selected-NC {
+    border-color: var(--nc);
+    background: var(--nc-bg);
+    color: var(--nc);
+    box-shadow: 0 2px 8px rgba(220,38,38,0.2);
+  }
+
+  .cal-btn.selected-NA {
+    border-color: var(--na);
+    background: var(--na-bg);
+    color: var(--na);
+  }
+
+  /* ═══ OBSERVACION + FOTO ZONE ═══ */
+  .obs-zone {
+    display: none;
+    background: #FFFBEB;
+    border: 1px dashed #FCD34D;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 8px;
+    gap: 10px;
+    flex-direction: column;
+  }
+
+  .obs-zone.visible { display: flex; }
+
+  .obs-zone textarea {
+    width: 100%;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    color: #374151;
+    resize: vertical;
+    min-height: 70px;
+    outline: none;
+    background: white;
+    transition: border-color 0.2s;
+  }
+
+  .obs-zone textarea:focus { border-color: var(--aaq-gold); }
+
+  .foto-zone {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .foto-thumb {
+    width: 72px; height: 72px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid var(--aaq-border);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .foto-item {
+    position: relative;
+    width: 72px; height: 72px;
+  }
+
+  .foto-delete {
+    position: absolute;
+    top: -5px; right: -5px;
+    width: 20px; height: 20px;
+    background: var(--nc);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    z-index: 5;
+  }
+
+  .btn-add-foto {
+    width: 72px; height: 72px;
+    border: 2px dashed #D1D5DB;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--aaq-gray);
+    font-size: 10px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .btn-add-foto:hover { border-color: var(--aaq-gold); color: var(--aaq-gold); }
+  .btn-add-foto .plus { font-size: 22px; line-height: 1; }
+  .btn-add-foto input { display: none; }
+
+  .uploading-indicator {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--aaq-gray);
+  }
+
+  .uploading-indicator.show { display: flex; }
+
+  /* ═══ FIRMAS ═══ */
+  .firmas-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--aaq-border);
+  }
+
+  .firmas-header {
+    background: linear-gradient(135deg, var(--aaq-red), var(--aaq-red-dark));
+    padding: 14px 18px;
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .firmas-body { padding: 16px; }
+
+  .firma-item { margin-bottom: 20px; }
+  .firma-item:last-child { margin-bottom: 0; }
+
+  .firma-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .firma-canvas {
+    width: 100%;
+    height: 140px;
+    border: 2px solid var(--aaq-border);
+    border-radius: 10px;
+    background: white;
+    touch-action: none;
+    cursor: crosshair;
+    display: block;
+  }
+
+  .firma-canvas.has-signature { border-color: var(--cumple); }
+
+  .btn-clear-firma {
+    background: none;
+    border: 1px solid var(--aaq-border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 11px;
+    color: var(--aaq-gray);
+    cursor: pointer;
+    margin-top: 6px;
+    font-family: 'Barlow', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-clear-firma:hover { border-color: var(--nc); color: var(--nc); }
+
+  /* ═══ STICKY BOTTOM BAR ═══ */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 100;
+    background: white;
+    border-top: 1px solid var(--aaq-border);
+    padding: 12px 16px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  }
+
+  .bottom-bar-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .total-pct-display {
+    flex: 1;
+  }
+
+  .total-pct-label { font-size: 10px; color: var(--aaq-gray); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .total-pct-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+
+  .pct-green { color: var(--cumple); }
+  .pct-orange { color: var(--ep); }
+  .pct-red { color: var(--nc); }
+
+  .btn-enviar {
+    background: linear-gradient(135deg, var(--aaq-red), var(--aaq-red-dark));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 24px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 4px 15px rgba(192,57,43,0.3);
+    white-space: nowrap;
+  }
+
+  .btn-enviar:disabled {
+    background: #D1D5DB;
+    color: #9CA3AF;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-enviar:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(192,57,43,0.4);
+  }
+
+  /* ═══ MODAL ═══ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.active { display: flex !important; }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    padding: 28px 24px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    text-align: center;
+  }
+
+  .modal-icon { font-size: 48px; margin-bottom: 14px; }
+  .modal-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 8px; }
+  .modal-msg { color: var(--aaq-gray); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .modal-btn-primary { background: var(--aaq-red); color: white; }
+  .modal-btn-secondary { background: #F3F4F6; color: #374151; }
+
+  /* ═══ SPINNER OVERLAY ═══ */
+  .spinner-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 99999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .spinner-overlay.show { display: flex !important; }
+
+  .spinner {
+    width: 52px; height: 52px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: var(--aaq-red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .spinner-text {
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    max-width: 260px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-brand">
+      <div class="logo-sm"></div>
+      <div class="topbar-title">
+        Verificación Contratistas
+        <span>ANGLO AMERICAN QUELLAVECO</span>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-sticky">
+  <div class="progress-inner">
+    <div class="progress-labels">
+      <span class="progress-text" id="progress-label">0 de 0 ítems respondidos</span>
+      <span class="progress-pct" id="progress-pct-label">0%</span>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main-content">
+
+  <!-- HEADER INFO CARD -->
+  <div class="header-card">
+    <div class="auditor-badge">
+      <span class="icon">👷</span>
+      <div>
+        <div class="info">Auditor</div>
+        <div class="name" id="auditor-name">Cargando...</div>
+      </div>
+    </div>
+    <div class="header-title">📋 DATOS DE LA VERIFICACIÓN</div>
+    <div class="header-grid">
+      <div class="field-group">
+        <label>Empresa Auditada *</label>
+        <select id="empresa">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Nombre del Trabajo *</label>
+        <input type="text" id="nombre-trabajo" placeholder="Ej: Mantenimiento PM-2024">
+      </div>
+      <div class="field-group">
+        <label>Ubicación</label>
+        <input type="text" id="ubicacion" placeholder="Ej: Planta Flotación C1">
+      </div>
+      <div class="field-group">
+        <label>Disciplina</label>
+        <input type="text" id="disciplina" placeholder="Ej: Mecánico / Eléctrico">
+      </div>
+      <div class="field-group">
+        <label>Supervisor Operativo (Contratista)</label>
+        <input type="text" id="sup-operativo" placeholder="Nombre completo">
+      </div>
+      <div class="field-group">
+        <label>Supervisor SHE (Contratista)</label>
+        <input type="text" id="sup-she" placeholder="Nombre completo">
+      </div>
+      <div class="field-group">
+        <label>Supervisor AAQSA</label>
+        <input type="text" id="sup-aaqsa" placeholder="Nombre completo">
+      </div>
+      <div class="field-group">
+        <label>N° Trabajadores Evaluados</label>
+        <input type="number" id="num-trabajadores" placeholder="0" min="1">
+      </div>
+      <div class="field-group">
+        <label>Fecha</label>
+        <input type="date" id="fecha">
+      </div>
+      <div class="field-group">
+        <label>Hora</label>
+        <input type="time" id="hora">
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST (se genera dinámicamente) -->
+  <div id="checklist-container"></div>
+
+  <!-- FIRMAS DIGITALES -->
+  <div class="firmas-card" id="firmas-section">
+    <div class="firmas-header">✍️ FIRMAS DIGITALES</div>
+    <div class="firmas-body">
+      <div class="firma-item">
+        <div class="firma-label">🔷 Supervisor Operativo (Contratista)</div>
+        <canvas class="firma-canvas" id="canvas-sup-op" width="700" height="140"></canvas>
+        <button class="btn-clear-firma" onclick="clearFirma('canvas-sup-op')">🗑 Limpiar firma</button>
+      </div>
+      <div class="firma-item">
+        <div class="firma-label">🔶 Supervisor SHE (Contratista)</div>
+        <canvas class="firma-canvas" id="canvas-sup-she" width="700" height="140"></canvas>
+        <button class="btn-clear-firma" onclick="clearFirma('canvas-sup-she')">🗑 Limpiar firma</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="bottom-bar-inner">
+    <div class="total-pct-display">
+      <div class="total-pct-label">Cumplimiento General</div>
+      <div class="total-pct-value pct-red" id="total-pct">— %</div>
+    </div>
+    <button class="btn-enviar" id="btn-enviar" disabled onclick="confirmarEnvio()">
+      ENVIAR VERIFICACIÓN
+    </button>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal">
+    <div class="modal-icon">📤</div>
+    <div class="modal-title">Enviar Verificación</div>
+    <div class="modal-msg" id="modal-confirm-msg">¿Estás seguro de que deseas enviar esta verificación? Se generará el PDF y se enviará a tu WhatsApp.</div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('modal-confirm')">Cancelar</button>
+      <button class="modal-btn modal-btn-primary" onclick="enviarVerificacion()">Sí, Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SPINNER -->
+<div class="spinner-overlay" id="spinner">
+  <div class="spinner"></div>
+  <div class="spinner-text" id="spinner-text">Procesando...</div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN
+// ============================================================
+const CONFIG = {
+  SHEETBEST_URL: 'https://api.sheetbest.com/sheets/TU-ID-AQUI',
+  CALLMEBOT_APIKEY: 'TU-APIKEY-CALLMEBOT',
+  IMGUR_CLIENT_ID: 'TU-CLIENT-ID-IMGUR'
+};
+
+// ============================================================
+// CHECKLIST DATA
+// ============================================================
+const CHECKLIST = {
+  elementos: [
+    {
+      id: 1, titulo: "1. SUPERVISOR OPERATIVO (CONTRATISTA)",
+      criterios: [
+        { subtitulo: "1.1 Gestión de Riesgos", items: [
+          { id:"1.1.1", texto:"¿Ha elaborado y conoce la Matriz IPERC Línea Base de las tareas bajo su supervisión? ¿Tiene el documento disponible en el área de trabajo, puede relacionarla con los estándares SHE de AAQSA aplicables (ESO, procedimientos) y explicar los controles identificados?" },
+          { id:"1.1.2", texto:"¿Ha elaborado y conoce el PETS de las tareas bajo su supervisión? ¿Puede explicar los pasos detallados, recursos, controles críticos y controles adicionales contemplados?" },
+          { id:"1.1.3", texto:"¿Conoce los Estándares Críticos de Fatales (ECF) de Anglo American aplicables a las tareas que supervisa y demuestra competencia para implementar los controles críticos correspondientes?" },
+          { id:"1.1.4", texto:"¿Se ha asegurado de contar con todos los recursos necesarios (personal, equipos, herramientas, materiales, EPP) contemplados en los PETS y que estos se encuentren en condiciones operativas para completar la tarea de forma segura?" },
+          { id:"1.1.5", texto:"¿Ha identificado todas las fuentes de energía presentes en la tarea y verificado su correcto aislamiento y bloqueo conforme al Estándar de Aislamiento de Energía de AAQSA (AA-QLL-SHE-ESO-0028)?" },
+          { id:"1.1.6", texto:"¿Ha asegurado que las condiciones físicas del área de trabajo (orden, limpieza, almacenamiento, libre tránsito, señalización y demarcación) sean las adecuadas antes de iniciar la tarea?" },
+          { id:"1.1.7", texto:"¿Ha identificado y controlado los peligros de la tarea y del entorno (nivel superior, inferior, alrededores)? ¿Estos están registrados en el ATS/IPERC Continuo con sus controles específicos?" },
+          { id:"1.1.8", texto:"¿Tiene identificadas las posibles situaciones de emergencia de la tarea, conoce los números de contacto de emergencia de AAQSA (médico, ambulancia, brigada) y su equipo sabe cómo actuar?" }
+        ]},
+        { subtitulo: "1.2 Gestión de Competencias del Personal", items: [
+          { id:"1.2.1", texto:"¿Ha verificado que sus trabajadores conocen, entienden y aplican el PETS, la Matriz IPERC Línea Base y los controles críticos de los ECF aplicables a las tareas que realizan?" },
+          { id:"1.2.2", texto:"¿Ha asegurado que todos sus trabajadores cuentan con las acreditaciones, certificaciones y habilitaciones vigentes requeridas por AAQSA para realizar tareas críticas y operar equipos/vehículos?" },
+          { id:"1.2.3", texto:"¿Ha liderado la elaboración del ATS/IPERC Continuo con su equipo verificando que todos comprenden los controles antes de iniciar? ¿Los permisos de trabajo requeridos están gestionados y disponibles en campo?" }
+        ]},
+        { subtitulo: "1.3 Liderazgo SHE", items: [
+          { id:"1.3.1", texto:"¿Ha liderado la reunión de inicio de turno (Toolbox Talk) resaltando los riesgos críticos del día y los controles a implementar, y ha verificado mediante preguntas que el equipo está listo para trabajar?" },
+          { id:"1.3.2", texto:"¿Realiza recorridos de liderazgo visible (VFL) en campo, interactuando con su equipo sobre comportamientos seguros? ¿Detiene y corrige prácticas inseguras cuando las identifica?" },
+          { id:"1.3.3", texto:"¿Comprende sus obligaciones y responsabilidades conforme al D.S. 024-2016-EM y al Manual SIG SHE de AAQSA para Empresas Contratistas?" },
+          { id:"1.3.4", texto:"¿Reporta de forma inmediata todo incidente, HPH (High Potential Hazard) o condición subestándar identificada en campo a la supervisión de AAQSA y su jefatura directa?" }
+        ]}
+      ]
+    },
+    {
+      id: 2, titulo: "2. PERSONAL / TRABAJADORES (CONTRATISTA)",
+      criterios: [
+        { subtitulo: "2.1 Competencia y Experiencia", items: [
+          { id:"2.1.1", texto:"¿Conocen los peligros, riesgos y controles de las tareas a ejecutar según la Matriz IPERC Línea Base, el ATS/IPERC Continuo y los estándares SHE de AAQSA aplicables?" },
+          { id:"2.1.2", texto:"¿Conocen con detalle los pasos, recursos y controles críticos del PETS de las tareas en que participan, y aplican los controles de los Estándares Críticos de Fatales (ECF) correspondientes?" },
+          { id:"2.1.3", texto:"¿Demuestran conocimiento y experiencia para operar maquinaria, equipos y herramientas de manera segura? ¿Conocen los riesgos asociados (línea de fuego, atrapamiento, etc.) y cómo mitigarlos?" },
+          { id:"2.1.4", texto:"¿Son capaces de identificar las fuentes de energía presentes en la tarea y conocen cómo aislarlas y bloquearlas conforme al Estándar de Aislamiento de Energía de AAQSA?" },
+          { id:"2.1.5", texto:"¿Conocen el correcto uso, inspección y almacenamiento de los EPP requeridos para las tareas que realizan? ¿Los llevan correctamente puestos en campo?" },
+          { id:"2.1.6", texto:"¿Han inspeccionado el lugar de trabajo antes de iniciar, asegurando condiciones adecuadas (orden, limpieza, demarcación) y considerado peligros del nivel superior, inferior y entorno en el ATS/IPERC Continuo?" },
+          { id:"2.1.7", texto:"¿Conocen las posibles situaciones de emergencia del área, la ubicación de los equipos de respuesta (extintores, kit de derrames, botiquín) y cómo comunicarlas?" }
+        ]},
+        { subtitulo: "2.2 Empoderamiento y Responsabilidad", items: [
+          { id:"2.2.1", texto:"¿Se encuentran física y mentalmente aptos para trabajar (libres de fatiga, alcohol, drogas o medicamentos que afecten su desempeño)? ¿Pueden reconocer cuándo un compañero no está en condiciones de trabajar?" },
+          { id:"2.2.2", texto:"¿Han participado activamente en la reunión de inicio de turno y en la elaboración del ATS/IPERC Continuo, expresando sus preocupaciones SHE antes de iniciar la tarea?" },
+          { id:"2.2.3", texto:"¿Comprenden su responsabilidad de detener las actividades ante cambios en el alcance del trabajo, nuevos peligros no controlados o si los controles establecidos no pueden implementarse?" },
+          { id:"2.2.4", texto:"¿Cuentan con las acreditaciones y habilitaciones vigentes requeridas para las tareas críticas y equipos que operan? ¿Conocen los roles y responsabilidades de cada miembro del equipo?" },
+          { id:"2.2.5", texto:"¿Comprenden la importancia de reportar de forma inmediata cualquier incidente, HPH o condición subestándar identificada, y las consecuencias de no hacerlo?" }
+        ]}
+      ]
+    },
+    {
+      id: 3, titulo: "3. SUPERVISOR SHE (CONTRATISTA)",
+      criterios: [
+        { subtitulo: "3.1 Competencia Técnica SHE", items: [
+          { id:"3.1.1", texto:"¿Conoce los estándares operativos SHE de AAQSA (ESO, ECF, procedimientos) aplicables a las tareas supervisadas y se asegura que el equipo los comprenda y aplique en campo?" },
+          { id:"3.1.2", texto:"¿Conoce el PETS de las tareas, ha verificado que contemple todos los pasos y controles necesarios, y que el personal lo aplica durante la ejecución?" },
+          { id:"3.1.3", texto:"¿Ha verificado que todas las fuentes de energía han sido correctamente identificadas, aisladas y bloqueadas conforme al Estándar de Aislamiento de Energía (AA-QLL-SHE-ESO-0028), asegurando el entendimiento del equipo?" },
+          { id:"3.1.4", texto:"¿Inspecciona el área de trabajo antes, durante y al final de la tarea verificando condiciones adecuadas (orden, limpieza, demarcación, señalización), involucrando al Supervisor Operativo en las observaciones?" },
+          { id:"3.1.5", texto:"¿Ha verificado el correcto llenado del ATS/IPERC Continuo y los permisos de trabajo requeridos, incluyendo la identificación de peligros del entorno (nivel superior, inferior, alrededores) y su validación por el Supervisor Operativo?" }
+        ]},
+        { subtitulo: "3.2 Liderazgo SHE y Soporte en Campo", items: [
+          { id:"3.2.1", texto:"¿Ha verificado que el Supervisor Operativo y el personal conocen la Matriz IPERC Línea Base, el PETS y los controles críticos de los ECF aplicables, y saben cómo proceder si un control crítico no puede implementarse?" },
+          { id:"3.2.2", texto:"¿Brinda soporte técnico SHE en campo al Supervisor Operativo y trabajadores en la identificación de peligros, aplicación de controles y resolución de situaciones no planificadas?" },
+          { id:"3.2.3", texto:"¿Se asegura que el Supervisor Operativo lidere el Toolbox Talk con el personal, participa activamente reforzando los temas críticos del día y verifica el entendimiento del equipo antes de iniciar?" },
+          { id:"3.2.4", texto:"¿Realiza recorridos de liderazgo visible (VFL) en campo, interactuando con supervisores y trabajadores sobre comportamientos y condiciones seguras? ¿Detiene e interviene ante prácticas o condiciones inseguras?" }
+        ]},
+        { subtitulo: "3.3 Empoderamiento y Responsabilidades", items: [
+          { id:"3.3.1", texto:"¿Verifica que se cuenten con todos los recursos necesarios (personal, equipos, EPP) en condiciones operativas para completar la tarea de forma segura, antes de autorizar el inicio del trabajo?" },
+          { id:"3.3.2", texto:"¿Identifica las posibles situaciones de emergencia de la tarea, conoce el Plan de Respuesta a Emergencias de AAQSA y verifica que todo el equipo conozca los contactos y protocolos de actuación?" },
+          { id:"3.3.3", texto:"¿Informa oportunamente a la Supervisión SHE de AAQSA sobre cambios en el alcance, HPH identificados en campo, incidentes o cualquier situación que requiera decisión operativa o reporte formal?" },
+          { id:"3.3.4", texto:"¿Ha verificado que todos los trabajadores cuentan con acreditaciones, habilitaciones vigentes y certificado de aptitud médica ocupacional requeridos por AAQSA y el D.S. 024-2016-EM?" }
+        ]}
+      ]
+    },
+    {
+      id: 4, titulo: "4. RECURSOS",
+      criterios: [
+        { subtitulo: "4.1 Maquinaria y Equipos Estacionarios", items: [
+          { id:"4.1.1", texto:"¿La maquinaria ha sido inspeccionada con el check list preoperativo correspondiente y se encuentra en condiciones operativas?" },
+          { id:"4.1.2", texto:"¿La maquinaria cuenta con mantenimiento preventivo vigente conforme al programa de mantenimiento de la contratista?" },
+          { id:"4.1.3", texto:"¿La maquinaria cuenta con dispositivos que permitan el bloqueo conforme al Estándar de Aislamiento de Energía de AAQSA (AA-QLL-SHE-ESO-0028) para labores de mantenimiento preventivo/correctivo?" },
+          { id:"4.1.4", texto:"¿La maquinaria cuenta con todos los dispositivos de seguridad (guardas, parada de emergencia, protección eléctrica) y señalización según el manual de operación y el Estándar de Guardas de Protección (AA-QLL-SHE-ESO-0033)?" },
+          { id:"4.1.5", texto:"¿Los componentes eléctricos (cables, tableros, conectores, puestas a tierra) se encuentran correctamente instalados, inspeccionados y cumplen el Estándar de Puesta a Tierra de AAQSA (AA-QLL-SHE-ESO-0045)?" }
+        ]},
+        { subtitulo: "4.2 Equipo Pesado / Liviano / Móvil", items: [
+          { id:"4.2.1", texto:"¿El equipo ha sido inspeccionado completando el check list preoperativo, y este refleja las condiciones reales del equipo?" },
+          { id:"4.2.2", texto:"¿El equipo cuenta con mantenimiento preventivo vigente y ha sido habilitado conforme al Instructivo de Habilitación de Vehículos y Equipos de AAQSA (AA-QLL-SHE-INS-0007)?" },
+          { id:"4.2.3", texto:"¿El equipo cuenta con todos los dispositivos de seguridad requeridos (alarma de retroceso, cinturón de seguridad, acceso con 3 puntos de apoyo, etc.) y elementos de seguridad (tacos, conos, triángulos) conforme al estándar de AAQSA?" },
+          { id:"4.2.4", texto:"¿Si se realizan izajes: el equipo cuenta con certificación vigente expedida por entidad competente, y sus accesorios (eslingas, grilletes, ganchos) están inspeccionados, operativos y almacenados correctamente?" }
+        ]},
+        { subtitulo: "4.3 Herramientas Manuales, de Poder y Materiales", items: [
+          { id:"4.3.1", texto:"¿Las herramientas manuales y de poder han sido inspeccionadas, se encuentran operativas según manual de operación/informe técnico, y se almacenan correctamente?" },
+          { id:"4.3.2", texto:"¿Las herramientas de poder cuentan con todos los dispositivos de seguridad (guardas, doble aislamiento, interruptor hombre muerto) según el manual de operación y estándares de AAQSA?" },
+          { id:"4.3.3", texto:"¿Los productos químicos utilizados se encuentran en envases adecuados, correctamente etiquetados, almacenados conforme a la Matriz de Compatibilidad y cuentan con las Fichas de Datos de Seguridad (FDS) disponibles en campo?" },
+          { id:"4.3.4", texto:"¿Se cuenta con los materiales necesarios para realizar la tarea, en buen estado y correctamente almacenados en un lugar específico con las condiciones requeridas?" }
+        ]}
+      ]
+    },
+    {
+      id: 5, titulo: "5. GESTIÓN AMBIENTAL (SHE - MEDIO AMBIENTE)",
+      criterios: [
+        { subtitulo: "5.1 Residuos, Fugas y Derrames", items: [
+          { id:"5.1.1", texto:"¿Se ha definido cómo y dónde almacenar temporalmente los residuos generados por la tarea (segregación, contenedores rotulados), conforme al Estándar de Residuos Sólidos y Líquidos de AAQSA (AA-QLL-SHE-ESO-0003)? ¿Es de conocimiento de todo el equipo?" },
+          { id:"5.1.2", texto:"¿Se cuenta con los recursos necesarios (kit anti-derrames, absorbentes, EPP específico) para actuar ante fugas o derrames de productos químicos? ¿El equipo conoce el protocolo de primera respuesta de AAQSA (MATPEL)?" },
+          { id:"5.1.3", texto:"¿Se han identificado los aspectos e impactos ambientales de la tarea (emisiones, generación de residuos peligrosos, riesgo de contaminación de suelo/agua) y están registrados en el ATS/IPERC Continuo u otro documento aplicable?" }
+        ]}
+      ]
+    }
+  ]
+};
+
+// Estado de respuestas: { itemId: { cal: 'C'|'EP'|'NC'|'NA', obs: '', fotos: [urls] } }
+const respuestas = {};
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+let currentSession = null;
+
+function getSession() {
+  try {
+    return JSON.parse(sessionStorage.getItem('aaq_session') || localStorage.getItem('aaq_session') || 'null');
+  } catch(e) { return null; }
+}
+
+function logout() {
+  localStorage.removeItem('aaq_session');
+  sessionStorage.removeItem('aaq_session');
+  window.location.href = 'login.html';
+}
+
+async function init() {
+  currentSession = getSession();
+  if (!currentSession || currentSession.role !== 'auditor') {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // Set auditor name
+  document.getElementById('auditor-name').textContent =
+    `${currentSession.nombres} ${currentSession.apellidos} — DNI: ${currentSession.dni}`;
+
+  // Set date/time defaults
+  const now = new Date();
+  document.getElementById('fecha').value = now.toISOString().split('T')[0];
+  document.getElementById('hora').value = now.toTimeString().slice(0,5);
+
+  // Load empresas
+  await loadEmpresas();
+
+  // Build checklist
+  buildChecklist();
+
+  // Init signatures
+  initFirmas();
+
+  updateProgress();
+}
+
+async function loadEmpresas() {
+  try {
+    const res = await fetch(`${CONFIG.SHEETBEST_URL}/tabs/empresas`);
+    const empresas = await res.json();
+    const sel = document.getElementById('empresa');
+    empresas.filter(e => e.activo !== 'false').forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.nombre;
+      opt.textContent = e.nombre;
+      sel.appendChild(opt);
+    });
+  } catch(err) {
+    console.warn('No se pudieron cargar empresas:', err);
+    // Fallback empresas de ejemplo
+    const fallback = ['EMPRESA CONTRATISTA 1','EMPRESA CONTRATISTA 2','EMPRESA CONTRATISTA 3'];
+    const sel = document.getElementById('empresa');
+    fallback.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n; opt.textContent = n;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+// ══════════════════════════════════════════════
+// BUILD CHECKLIST
+// ══════════════════════════════════════════════
+function buildChecklist() {
+  const container = document.getElementById('checklist-container');
+  let globalItemNum = 0;
+
+  CHECKLIST.elementos.forEach((elem, ei) => {
+    const section = document.createElement('div');
+    section.className = 'elemento-section';
+    section.id = `elem-${elem.id}`;
+
+    const header = document.createElement('div');
+    header.className = 'elemento-header';
+    header.innerHTML = `
+      <div class="elemento-header-left">
+        <div class="elemento-num">${elem.id}</div>
+        <div class="elemento-title-text">${elem.titulo.replace(/^\d+\.\s+/, '')}</div>
+      </div>
+      <div class="elemento-stats">
+        <div class="pct-badge" id="pct-elem-${elem.id}">—%</div>
+        <span class="chevron" id="chev-${elem.id}">▼</span>
+      </div>
+    `;
+    header.onclick = () => toggleElemento(elem.id);
+
+    const body = document.createElement('div');
+    body.className = 'elemento-body';
+    body.id = `body-${elem.id}`;
+
+    elem.criterios.forEach(crit => {
+      const critDiv = document.createElement('div');
+      critDiv.className = 'criterio-group';
+
+      const subtDiv = document.createElement('div');
+      subtDiv.className = 'criterio-subtitulo';
+      subtDiv.textContent = crit.subtitulo;
+      critDiv.appendChild(subtDiv);
+
+      crit.items.forEach(item => {
+        globalItemNum++;
+        respuestas[item.id] = { cal: null, obs: '', fotos: [] };
+
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-card';
+        itemCard.id = `item-card-${item.id}`;
+        itemCard.innerHTML = `
+          <div class="item-header">
+            <div class="item-num">#${globalItemNum}</div>
+            <div class="item-text">${item.texto}</div>
+          </div>
+          <div class="calificacion-group">
+            <button class="cal-btn" onclick="setCal('${item.id}','C')" id="btn-C-${item.id}">
+              <span class="cal-icon">✅</span>CUMPLE
+            </button>
+            <button class="cal-btn" onclick="setCal('${item.id}','EP')" id="btn-EP-${item.id}">
+              <span class="cal-icon">⚠️</span>EN PROCESO
+            </button>
+            <button class="cal-btn" onclick="setCal('${item.id}','NC')" id="btn-NC-${item.id}">
+              <span class="cal-icon">❌</span>NO CUMPLE
+            </button>
+            <button class="cal-btn" onclick="setCal('${item.id}','NA')" id="btn-NA-${item.id}">
+              <span class="cal-icon">➖</span>NO APLICA
+            </button>
+          </div>
+          <div class="obs-zone" id="obs-zone-${item.id}">
+            <textarea placeholder="Observación / comentario (opcional)..." 
+              onchange="respuestas['${item.id}'].obs = this.value"
+              rows="2"></textarea>
+            <div class="foto-zone" id="foto-zone-${item.id}">
+              <button class="btn-add-foto" onclick="triggerFotoInput('${item.id}')">
+                <span class="plus">📷</span>
+                <span>Foto</span>
+              </button>
+              <div class="uploading-indicator" id="uploading-${item.id}">
+                <div style="width:16px;height:16px;border:2px solid #ccc;border-top-color:#D97706;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+                Subiendo...
+              </div>
+            </div>
+          </div>
+          <input type="file" accept="image/*" capture="environment"
+            id="file-input-${item.id}"
+            style="display:none"
+            onchange="handleFotoUpload(this, '${item.id}')">
+        `;
+
+        critDiv.appendChild(itemCard);
+      });
+
+      body.appendChild(critDiv);
+    });
+
+    section.appendChild(header);
+    section.appendChild(body);
+    container.appendChild(section);
+  });
+}
+
+function toggleElemento(id) {
+  const body = document.getElementById(`body-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  body.classList.toggle('collapsed');
+  chev.textContent = body.classList.contains('collapsed') ? '▶' : '▼';
+}
+
+// ══════════════════════════════════════════════
+// CALIFICACIÓN
+// ══════════════════════════════════════════════
+const PCT_MAP = { C: 100, EP: 50, NC: 0, NA: null };
+
+function setCal(itemId, cal) {
+  respuestas[itemId].cal = cal;
+
+  // Update button styles
+  ['C','EP','NC','NA'].forEach(c => {
+    const btn = document.getElementById(`btn-${c}-${itemId}`);
+    btn.className = 'cal-btn' + (c === cal ? ` selected-${c}` : '');
+  });
+
+  // Show/hide obs zone (show if not NA and pct < 100)
+  const obsZone = document.getElementById(`obs-zone-${itemId}`);
+  if (cal === 'NA' || cal === 'C') {
+    obsZone.classList.remove('visible');
+  } else {
+    obsZone.classList.add('visible');
+  }
+
+  updateElementoPct(itemId);
+  updateProgress();
+  updateTotalPct();
+}
+
+function getElementoDeItem(itemId) {
+  for (const elem of CHECKLIST.elementos) {
+    for (const crit of elem.criterios) {
+      if (crit.items.find(i => i.id === itemId)) return elem.id;
+    }
+  }
+  return null;
+}
+
+function getAllItemsOfElemento(elemId) {
+  const elem = CHECKLIST.elementos.find(e => e.id === elemId);
+  if (!elem) return [];
+  return elem.criterios.flatMap(c => c.items);
+}
+
+function calcPct(items) {
+  const applicable = items.filter(i => respuestas[i.id] && respuestas[i.id].cal && respuestas[i.id].cal !== 'NA');
+  if (applicable.length === 0) return null;
+  const sum = applicable.reduce((acc, i) => acc + (PCT_MAP[respuestas[i.id].cal] || 0), 0);
+  return Math.round(sum / applicable.length);
+}
+
+function updateElementoPct(itemId) {
+  const elemId = getElementoDeItem(itemId);
+  if (!elemId) return;
+  const items = getAllItemsOfElemento(elemId);
+  const pct = calcPct(items);
+  const el = document.getElementById(`pct-elem-${elemId}`);
+  el.textContent = pct !== null ? `${pct}%` : '—%';
+  el.style.color = pct === null ? '#D4A017' : pct >= 80 ? '#16A34A' : pct >= 50 ? '#D97706' : '#DC2626';
+}
+
+function getTotalPct() {
+  const allItems = CHECKLIST.elementos.flatMap(e => e.criterios.flatMap(c => c.items));
+  return calcPct(allItems);
+}
+
+function updateTotalPct() {
+  const pct = getTotalPct();
+  const el = document.getElementById('total-pct');
+  if (pct === null) {
+    el.textContent = '— %';
+    el.className = 'total-pct-value pct-red';
+  } else {
+    el.textContent = `${pct}%`;
+    el.className = 'total-pct-value ' + (pct >= 80 ? 'pct-green' : pct >= 50 ? 'pct-orange' : 'pct-red');
+  }
+}
+
+function updateProgress() {
+  const allItems = CHECKLIST.elementos.flatMap(e => e.criterios.flatMap(c => c.items));
+  const total = allItems.length;
+  const answered = allItems.filter(i => respuestas[i.id] && respuestas[i.id].cal).length;
+  const pct = Math.round((answered / total) * 100);
+
+  document.getElementById('progress-label').textContent = `${answered} de ${total} ítems respondidos`;
+  document.getElementById('progress-pct-label').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+  // Enable send button only if all answered
+  document.getElementById('btn-enviar').disabled = answered < total;
+}
+
+// ══════════════════════════════════════════════
+// FOTOS — IMGUR
+// ══════════════════════════════════════════════
+function triggerFotoInput(itemId) {
+  document.getElementById(`file-input-${itemId}`).click();
+}
+
+async function compressImage(file, maxPx = 1200, quality = 0.82) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadToImgur(blob) {
+  const formData = new FormData();
+  formData.append('image', blob);
+
+  const res = await fetch('https://api.imgur.com/3/image', {
+    method: 'POST',
+    headers: { Authorization: `Client-ID ${CONFIG.IMGUR_CLIENT_ID}` },
+    body: formData
+  });
+
+  if (!res.ok) throw new Error('Error subiendo a Imgur');
+  const data = await res.json();
+  return data.data.link;
+}
+
+async function handleFotoUpload(input, itemId) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const uploadingEl = document.getElementById(`uploading-${itemId}`);
+  uploadingEl.classList.add('show');
+
+  try {
+    const compressed = await compressImage(file, 1200, 0.82);
+    const url = await uploadToImgur(compressed);
+
+    respuestas[itemId].fotos.push(url);
+    addFotoThumb(itemId, url, respuestas[itemId].fotos.length - 1);
+  } catch(err) {
+    alert('Error al subir la foto. Verifica tu conexión.');
+    console.error(err);
+  } finally {
+    uploadingEl.classList.remove('show');
+    input.value = '';
+  }
+}
+
+function addFotoThumb(itemId, url, idx) {
+  const zone = document.getElementById(`foto-zone-${itemId}`);
+  const addBtn = zone.querySelector('.btn-add-foto');
+
+  const item = document.createElement('div');
+  item.className = 'foto-item';
+  item.id = `foto-item-${itemId}-${idx}`;
+  item.innerHTML = `
+    <img src="${url}" class="foto-thumb" onclick="window.open('${url}','_blank')">
+    <button class="foto-delete" onclick="deleteFoto('${itemId}', ${idx})">×</button>
+  `;
+
+  zone.insertBefore(item, addBtn);
+}
+
+function deleteFoto(itemId, idx) {
+  respuestas[itemId].fotos.splice(idx, 1);
+  // Re-render foto zone
+  const zone = document.getElementById(`foto-zone-${itemId}`);
+  zone.querySelectorAll('.foto-item').forEach(el => el.remove());
+  respuestas[itemId].fotos.forEach((url, i) => addFotoThumb(itemId, url, i));
+}
+
+// ══════════════════════════════════════════════
+// FIRMAS
+// ══════════════════════════════════════════════
+const firmaDrawing = {};
+
+function initFirmas() {
+  ['canvas-sup-op', 'canvas-sup-she'].forEach(id => {
+    const canvas = document.getElementById(id);
+    const ctx = canvas.getContext('2d');
+    firmaDrawing[id] = { drawing: false, ctx, hasData: false };
+
+    // Resize canvas to actual display width
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      const tmp = canvas.toDataURL();
+      canvas.width = rect.width;
+      canvas.height = 140;
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = tmp;
+    };
+
+    resizeCanvas();
+
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const t = e.touches ? e.touches[0] : e;
+      return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+    };
+
+    const startDraw = (e) => {
+      e.preventDefault();
+      const fd = firmaDrawing[id];
+      fd.drawing = true;
+      const pos = getPos(e);
+      fd.ctx.beginPath();
+      fd.ctx.moveTo(pos.x, pos.y);
+    };
+
+    const draw = (e) => {
+      e.preventDefault();
+      const fd = firmaDrawing[id];
+      if (!fd.drawing) return;
+      const pos = getPos(e);
+      fd.ctx.lineTo(pos.x, pos.y);
+      fd.ctx.strokeStyle = '#1F2937';
+      fd.ctx.lineWidth = 2.5;
+      fd.ctx.lineCap = 'round';
+      fd.ctx.lineJoin = 'round';
+      fd.ctx.stroke();
+      fd.hasData = true;
+      canvas.classList.add('has-signature');
+    };
+
+    const stopDraw = () => { firmaDrawing[id].drawing = false; };
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDraw);
+  });
+}
+
+function clearFirma(id) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  firmaDrawing[id].hasData = false;
+  canvas.classList.remove('has-signature');
+}
+
+// ══════════════════════════════════════════════
+// MODAL & UI HELPERS
+// ══════════════════════════════════════════════
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function showSpinner(text = 'Procesando...') {
+  document.getElementById('spinner-text').textContent = text;
+  document.getElementById('spinner').classList.add('show');
+}
+
+function hideSpinner() {
+  document.getElementById('spinner').classList.remove('show');
+}
+
+function confirmarEnvio() {
+  const empresa = document.getElementById('empresa').value;
+  const trabajo = document.getElementById('nombre-trabajo').value.trim();
+  if (!empresa || !trabajo) {
+    alert('Por favor completa el nombre de empresa y trabajo antes de enviar.');
+    return;
+  }
+  const pct = getTotalPct();
+  document.getElementById('modal-confirm-msg').textContent =
+    `Verificación a ${empresa} — Cumplimiento general: ${pct}%. Se generará el PDF y se enviará a tu WhatsApp.`;
+  document.getElementById('modal-confirm').classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// ENVIAR VERIFICACIÓN
+// ══════════════════════════════════════════════
+async function enviarVerificacion() {
+  closeModal('modal-confirm');
+  showSpinner('Guardando verificación...');
+
+  try {
+    // 1. Prepare data
+    const now = new Date();
+    const empresa = document.getElementById('empresa').value;
+    const trabajo = document.getElementById('nombre-trabajo').value.trim();
+    const ubicacion = document.getElementById('ubicacion').value.trim();
+    const disciplina = document.getElementById('disciplina').value.trim();
+    const supOp = document.getElementById('sup-operativo').value.trim();
+    const supShe = document.getElementById('sup-she').value.trim();
+    const supAaq = document.getElementById('sup-aaqsa').value.trim();
+    const numTrab = document.getElementById('num-trabajadores').value;
+    const fecha = document.getElementById('fecha').value;
+    const hora = document.getElementById('hora').value;
+
+    // Calc pcts per elemento
+    const pctByElem = {};
+    CHECKLIST.elementos.forEach(elem => {
+      const items = elem.criterios.flatMap(c => c.items);
+      pctByElem[elem.id] = calcPct(items);
+    });
+
+    const pctGeneral = getTotalPct();
+
+    // Build observaciones summary
+    const allItems = CHECKLIST.elementos.flatMap(e => e.criterios.flatMap(c => c.items));
+    const obsItems = allItems.filter(i => respuestas[i.id].obs || (respuestas[i.id].fotos && respuestas[i.id].fotos.length > 0));
+
+    const observacionesJSON = JSON.stringify(
+      obsItems.map(i => ({
+        id: i.id,
+        cal: respuestas[i.id].cal,
+        obs: respuestas[i.id].obs,
+        fotos: respuestas[i.id].fotos
+      }))
+    );
+
+    // All fotos as JSON per item
+    const fotosJSON = JSON.stringify(
+      Object.fromEntries(
+        allItems
+          .filter(i => respuestas[i.id].fotos && respuestas[i.id].fotos.length > 0)
+          .map(i => [i.id, respuestas[i.id].fotos])
+      )
+    );
+
+    // Firma data
+    const firmaOp = document.getElementById('canvas-sup-op').toDataURL('image/png');
+    const firmaShe = document.getElementById('canvas-sup-she').toDataURL('image/png');
+
+    // 2. Save to SheetBest
+    const rowData = {
+      timestamp: now.toISOString(),
+      empresa,
+      nombre_trabajo: trabajo,
+      ubicacion,
+      disciplina,
+      auditor: `${currentSession.nombres} ${currentSession.apellidos}`,
+      dni_auditor: currentSession.dni,
+      fecha,
+      hora,
+      sup_operativo: supOp,
+      sup_she: supShe,
+      sup_aaqsa: supAaq,
+      num_trabajadores: numTrab,
+      pct_elem1: pctByElem[1] !== null ? pctByElem[1] : 'N/A',
+      pct_elem2: pctByElem[2] !== null ? pctByElem[2] : 'N/A',
+      pct_elem3: pctByElem[3] !== null ? pctByElem[3] : 'N/A',
+      pct_elem4: pctByElem[4] !== null ? pctByElem[4] : 'N/A',
+      pct_elem5: pctByElem[5] !== null ? pctByElem[5] : 'N/A',
+      pct_general: pctGeneral !== null ? pctGeneral : 'N/A',
+      observaciones: observacionesJSON,
+      fotos: fotosJSON,
+      firma_sup_op: firmaOp,
+      firma_sup_she: firmaShe
+    };
+
+    await fetch(`${CONFIG.SHEETBEST_URL}/tabs/auditorias`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rowData)
+    });
+
+    // 3. Generate PDF
+    showSpinner('Generando PDF...');
+    const pdfBlob = await generatePDF(rowData, pctByElem, pctGeneral, allItems);
+
+    // 4. Send WhatsApp notification
+    showSpinner('Enviando a WhatsApp...');
+    await sendWhatsApp(pctGeneral, empresa, trabajo, pdfBlob);
+
+    hideSpinner();
+    alert(`✅ Verificación enviada correctamente.\n\nCumplimiento General: ${pctGeneral}%\nSe ha enviado el PDF a tu WhatsApp.`);
+
+    // Clear session and redirect
+    setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+
+  } catch(err) {
+    hideSpinner();
+    console.error(err);
+    alert('Error al enviar. Por favor intenta de nuevo.\n' + err.message);
+  }
+}
+
+// ══════════════════════════════════════════════
+// PDF GENERATION
+// ══════════════════════════════════════════════
+async function generatePDF(data, pctByElem, pctGeneral, allItems) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+  const pw = 210; // page width
+  const ml = 12, mr = 12;
+  const cw = pw - ml - mr;
+  let y = 12;
+
+  const colors = {
+    dark: [26, 26, 46],
+    red: [192, 57, 43],
+    gold: [212, 160, 23],
+    cumple: [22, 163, 74],
+    ep: [217, 119, 6],
+    nc: [220, 38, 38],
+    na: [107, 114, 128],
+    light: [248, 249, 250],
+    border: [229, 231, 235],
+    white: [255, 255, 255]
+  };
+
+  // ── HEADER
+  doc.setFillColor(...colors.dark);
+  doc.rect(0, 0, pw, 28, 'F');
+
+  doc.setFillColor(...colors.red);
+  doc.rect(0, 0, 4, 28, 'F');
+
+  doc.setTextColor(...colors.white);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('VERIFICACIÓN DE CONTROLES CRÍTICOS', ml + 4, 10);
+
+  doc.setFontSize(9);
+  doc.setTextColor(...colors.gold);
+  doc.text('ANGLO AMERICAN QUELLAVECO S.A.', ml + 4, 17);
+
+  doc.setTextColor(180, 180, 180);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(`Auditor: ${data.auditor} | DNI: ${data.dni_auditor} | Fecha: ${data.fecha} | Hora: ${data.hora}`, ml + 4, 23);
+
+  y = 35;
+
+  // ── INFO GRID
+  const infoFields = [
+    ['Empresa Auditada', data.empresa],
+    ['Nombre del Trabajo', data.nombre_trabajo],
+    ['Ubicación', data.ubicacion],
+    ['Disciplina', data.disciplina],
+    ['Supervisor Operativo', data.sup_operativo],
+    ['Supervisor SHE', data.sup_she],
+    ['Supervisor AAQSA', data.sup_aaqsa],
+    ['N° Trabajadores', data.num_trabajadores]
+  ];
+
+  doc.setFillColor(...colors.light);
+  doc.rect(ml, y, cw, 30, 'F');
+  doc.setDrawColor(...colors.border);
+  doc.rect(ml, y, cw, 30, 'S');
+
+  const halfCw = (cw - 4) / 2;
+  infoFields.forEach((f, i) => {
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const fx = ml + 3 + col * (halfCw + 4);
+    const fy = y + 4 + row * 7;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.na);
+    doc.text(f[0] + ':', fx, fy);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...colors.dark);
+    doc.setFontSize(8);
+    doc.text(f[1] || '—', fx + 35, fy);
+  });
+
+  y += 36;
+
+  // ── RESUMEN PORCENTAJES
+  doc.setFillColor(...colors.red);
+  doc.rect(ml, y, cw, 7, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...colors.white);
+  doc.text('RESUMEN DE CUMPLIMIENTO POR ELEMENTO', ml + 3, y + 5);
+  y += 9;
+
+  const elemNames = [
+    '1. Supervisor Operativo',
+    '2. Personal / Trabajadores',
+    '3. Supervisor SHE',
+    '4. Recursos',
+    '5. Gestión Ambiental'
+  ];
+
+  const colW = cw / 5;
+  elemNames.forEach((name, i) => {
+    const pct = pctByElem[i + 1];
+    const ex = ml + i * colW;
+
+    doc.setFillColor(...(pct === null ? colors.na : pct >= 80 ? colors.cumple : pct >= 50 ? colors.ep : colors.nc));
+    doc.rect(ex, y, colW - 1, 16, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(...colors.white);
+    const pctStr = pct !== null ? `${pct}%` : 'N/A';
+    const textW = doc.getTextWidth(pctStr);
+    doc.text(pctStr, ex + (colW - 1) / 2 - textW / 2, y + 10);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    const lines = doc.splitTextToSize(name, colW - 4);
+    doc.text(lines[0], ex + 2, y + 14);
+  });
+
+  y += 19;
+
+  // General pct box
+  const genColor = pctGeneral >= 80 ? colors.cumple : pctGeneral >= 50 ? colors.ep : colors.nc;
+  doc.setFillColor(...genColor);
+  doc.rect(ml, y, cw, 10, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...colors.white);
+  doc.text(`CUMPLIMIENTO GENERAL: ${pctGeneral !== null ? pctGeneral + '%' : 'N/A'}`, pw / 2, y + 7, { align: 'center' });
+  y += 14;
+
+  // ── DETALLE POR ELEMENTO
+  CHECKLIST.elementos.forEach((elem, ei) => {
+    const items = elem.criterios.flatMap(c => c.items);
+    const elemPct = pctByElem[elem.id];
+
+    // Check page space
+    if (y > 240) { doc.addPage(); y = 15; }
+
+    // Elemento header
+    doc.setFillColor(...colors.dark);
+    doc.rect(ml, y, cw, 7, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...colors.white);
+    doc.text(elem.titulo, ml + 3, y + 5);
+    if (elemPct !== null) {
+      doc.setTextColor(...colors.gold);
+      doc.text(`${elemPct}%`, pw - mr - 3, y + 5, { align: 'right' });
+    }
+    y += 9;
+
+    // Items table header
+    doc.setFillColor(...colors.light);
+    doc.rect(ml, y, cw, 5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...colors.na);
+    doc.text('#', ml + 2, y + 3.5);
+    doc.text('CRITERIO / INDICADOR', ml + 10, y + 3.5);
+    doc.text('CAL', pw - mr - 22, y + 3.5);
+    doc.text('RESULTADO', pw - mr - 15, y + 3.5);
+    y += 6;
+
+    let itemNum = 0;
+    elem.criterios.forEach(crit => {
+      // Subtitulo row
+      if (y > 270) { doc.addPage(); y = 15; }
+      doc.setFillColor(240, 240, 245);
+      doc.rect(ml, y, cw, 5, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(...colors.red);
+      doc.text(crit.subtitulo, ml + 3, y + 3.5);
+      y += 6;
+
+      crit.items.forEach(item => {
+        itemNum++;
+        const resp = respuestas[item.id];
+        const cal = resp?.cal || '—';
+        const pct = cal !== 'NA' && cal !== '—' ? PCT_MAP[cal] : null;
+
+        if (y > 270) { doc.addPage(); y = 15; }
+
+        const rowH = 8;
+        doc.setDrawColor(...colors.border);
+        doc.rect(ml, y, cw, rowH, 'S');
+
+        // Background
+        if (itemNum % 2 === 0) {
+          doc.setFillColor(250, 250, 252);
+          doc.rect(ml, y, cw, rowH, 'F');
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.setTextColor(...colors.dark);
+        doc.text(`${itemNum}`, ml + 3, y + 5.5);
+
+        const textLines = doc.splitTextToSize(item.texto, cw - 40);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.5);
+        doc.text(textLines[0], ml + 10, y + 5.5);
+
+        // Cal badge
+        const calColor = cal === 'C' ? colors.cumple : cal === 'EP' ? colors.ep : cal === 'NC' ? colors.nc : colors.na;
+        doc.setFillColor(...calColor);
+        doc.roundedRect(pw - mr - 23, y + 1.5, 10, 5, 1, 1, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(6);
+        doc.setTextColor(...colors.white);
+        doc.text(cal, pw - mr - 18, y + 5, { align: 'center' });
+
+        // Pct
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...(pct !== null ? calColor : colors.na));
+        const pctTxt = pct !== null ? `${pct}%` : '—';
+        doc.text(pctTxt, pw - mr - 3, y + 5.5, { align: 'right' });
+
+        y += rowH;
+
+        // Observación
+        if (resp?.obs) {
+          if (y > 270) { doc.addPage(); y = 15; }
+          doc.setFillColor(255, 251, 235);
+          doc.rect(ml, y, cw, 6, 'F');
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(6.5);
+          doc.setTextColor(146, 64, 14);
+          const obsText = doc.splitTextToSize(`📝 ${resp.obs}`, cw - 6);
+          doc.text(obsText[0], ml + 3, y + 4);
+          y += 7;
+        }
+
+        // Foto URLs
+        if (resp?.fotos && resp.fotos.length > 0) {
+          if (y > 270) { doc.addPage(); y = 15; }
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(5.5);
+          doc.setTextColor(...colors.na);
+          doc.text(`📷 ${resp.fotos.length} foto(s): ${resp.fotos.slice(0,2).join(' | ')}`, ml + 3, y + 3);
+          y += 5;
+        }
+      });
+    });
+
+    y += 4;
+  });
+
+  // ── FIRMAS
+  if (y > 230) { doc.addPage(); y = 15; }
+
+  doc.setFillColor(...colors.red);
+  doc.rect(ml, y, cw, 7, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...colors.white);
+  doc.text('FIRMAS DE CONFORMIDAD', ml + 3, y + 5);
+  y += 10;
+
+  const firmaW = (cw - 4) / 2;
+  const canvasOp = document.getElementById('canvas-sup-op');
+  const canvasShe = document.getElementById('canvas-sup-she');
+
+  const addFirma = (canvas, label, x) => {
+    doc.setDrawColor(...colors.border);
+    doc.rect(x, y, firmaW, 30, 'S');
+    const imgData = canvas.toDataURL('image/png');
+    doc.addImage(imgData, 'PNG', x + 2, y + 2, firmaW - 4, 22);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.na);
+    doc.text(label, x + firmaW / 2, y + 27, { align: 'center' });
+  };
+
+  addFirma(canvasOp, 'Supervisor Operativo (Contratista)', ml);
+  addFirma(canvasShe, 'Supervisor SHE (Contratista)', ml + firmaW + 4);
+
+  y += 35;
+
+  // Footer
+  doc.setFontSize(7);
+  doc.setTextColor(150, 150, 150);
+  doc.text(`Generado: ${new Date().toLocaleString('es-PE')} | Anglo American Quellaveco S.A. — Sistema VCC`, pw / 2, 290, { align: 'center' });
+
+  return doc.output('blob');
+}
+
+// ══════════════════════════════════════════════
+// WHATSAPP — CallMeBot
+// ══════════════════════════════════════════════
+async function sendWhatsApp(pctGeneral, empresa, trabajo, pdfBlob) {
+  const phone = currentSession.whatsapp;
+  if (!phone || !CONFIG.CALLMEBOT_APIKEY || CONFIG.CALLMEBOT_APIKEY === 'TU-APIKEY-CALLMEBOT') {
+    console.warn('WhatsApp no configurado');
+    return;
+  }
+
+  const msg = encodeURIComponent(
+    `✅ *VERIFICACIÓN COMPLETADA - AAQ*\n\n` +
+    `👷 Auditor: ${currentSession.nombres} ${currentSession.apellidos}\n` +
+    `🏢 Empresa: ${empresa}\n` +
+    `🔧 Trabajo: ${trabajo}\n` +
+    `📊 Cumplimiento General: *${pctGeneral}%*\n` +
+    `📅 Fecha: ${new Date().toLocaleDateString('es-PE')}\n\n` +
+    `_El PDF detallado ha sido guardado en el sistema._`
+  );
+
+  const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${msg}&apikey=${CONFIG.CALLMEBOT_APIKEY}`;
+
+  try {
+    await fetch(url, { mode: 'no-cors' });
+  } catch(e) {
+    console.warn('WhatsApp send error:', e);
+  }
+
+  // Also trigger PDF download for the auditor
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  const a = document.createElement('a');
+  a.href = pdfUrl;
+  a.download = `AAQ_Verificacion_${empresa.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+  a.click();
+  URL.revokeObjectURL(pdfUrl);
+}
+
+// ══════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
