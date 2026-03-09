@@ -728,6 +728,7 @@
     line-height: 1.5;
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -874,6 +875,7 @@
 <!-- SCRIPTS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
 // ============================================================
@@ -881,8 +883,16 @@
 // ============================================================
 const CONFIG = {
   SHEETBEST_URL: 'https://api.sheetbest.com/sheets/5892a5ad-bcbb-4505-bd68-762fba3f05fe',
-  CALLMEBOT_APIKEY: '1957358',
+  // EmailJS — Registrate en emailjs.com (gratis) y completa estos 3 datos:
+  EMAILJS_SERVICE_ID:  'service_4lk395d',    // ej: 'service_abc123'
+  EMAILJS_TEMPLATE_ID: 'template_ohagk2f',   // ej: 'template_xyz789'
+  EMAILJS_PUBLIC_KEY:  'jfs-lUeazoZ4EQ2FY',    // ej: 'user_AbCdEfGhIjKlMn'
 };
+
+// Init EmailJS
+if (typeof emailjs !== 'undefined' && CONFIG.EMAILJS_PUBLIC_KEY !== 'jfs-lUeazoZ4EQ2FY') {
+  emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+}
 
 // ============================================================
 // CHECKLIST DATA
@@ -1574,15 +1584,19 @@ async function enviarVerificacion() {
     showSpinner('Generando PDF...');
     const pdfBlob = await generatePDF(rowData, pctByElem, pctGeneral, allItems);
 
-    // 4. Send WhatsApp notification
-    showSpinner('Enviando a WhatsApp...');
-    await sendWhatsApp(pctGeneral, empresa, trabajo, pdfBlob);
+    // 4. Enviar PDF por email
+    showSpinner('Enviando PDF por correo...');
+    const emailEnviado = await sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral);
 
     hideSpinner();
-    alert(`✅ Verificación enviada correctamente.\n\nCumplimiento General: ${pctGeneral}%\nSe ha enviado el PDF a tu WhatsApp.`);
+    const emailMsg = emailEnviado
+      ? `\n📧 PDF enviado a: ${currentSession.email}`
+      : '\n⚠️ El PDF se descargó localmente (configura EmailJS para envío automático).';
+
+    alert(`✅ Verificación enviada correctamente.\n\nCumplimiento General: ${pctGeneral}%${emailMsg}`);
 
     // Clear session and redirect
-    setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+    setTimeout(() => { window.location.href = 'login.html'; }, 1500);
 
   } catch(err) {
     hideSpinner();
@@ -1598,327 +1612,363 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
-  const pw = 210; // page width
-  const ml = 12, mr = 12;
-  const cw = pw - ml - mr;
+  const pw = 210, ml = 12, mr = 12, cw = pw - ml - mr;
   let y = 12;
 
-  const colors = {
-    dark: [26, 26, 46],
-    red: [192, 57, 43],
-    gold: [212, 160, 23],
-    cumple: [22, 163, 74],
-    ep: [217, 119, 6],
-    nc: [220, 38, 38],
-    na: [107, 114, 128],
-    light: [248, 249, 250],
-    border: [229, 231, 235],
-    white: [255, 255, 255]
+  const C = {
+    dark:[26,26,46], red:[192,57,43], gold:[212,160,23],
+    cumple:[22,163,74], ep:[217,119,6], nc:[220,38,38],
+    na:[107,114,128], light:[248,249,250], border:[229,231,235], white:[255,255,255]
   };
 
-  // ── HEADER
-  doc.setFillColor(...colors.dark);
-  doc.rect(0, 0, pw, 28, 'F');
+  const pctColor = (p) => p===null?C.na : p>=80?C.cumple : p>=50?C.ep : C.nc;
+  const checkPage = (need=20) => { if (y + need > 282) { doc.addPage(); y = 15; } };
 
-  doc.setFillColor(...colors.red);
-  doc.rect(0, 0, 4, 28, 'F');
+  // ── HEADER PORTADA ────────────────────────────────────────────
+  doc.setFillColor(...C.dark); doc.rect(0,0,pw,32,'F');
+  doc.setFillColor(...C.red);  doc.rect(0,0,5,32,'F');
+  doc.setTextColor(...C.white);
+  doc.setFont('helvetica','bold'); doc.setFontSize(15);
+  doc.text('VERIFICACIÓN DE CONTROLES CRÍTICOS', ml+6, 12);
+  doc.setFontSize(9); doc.setTextColor(...C.gold);
+  doc.text('ANGLO AMERICAN QUELLAVECO S.A.', ml+6, 19);
+  doc.setTextColor(180,180,180); doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+  doc.text(`Auditor: ${data.auditor}  |  DNI: ${data.dni_auditor}  |  Fecha: ${data.fecha}  |  Hora: ${data.hora}`, ml+6, 27);
+  y = 38;
 
-  doc.setTextColor(...colors.white);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('VERIFICACIÓN DE CONTROLES CRÍTICOS', ml + 4, 10);
-
-  doc.setFontSize(9);
-  doc.setTextColor(...colors.gold);
-  doc.text('ANGLO AMERICAN QUELLAVECO S.A.', ml + 4, 17);
-
-  doc.setTextColor(180, 180, 180);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.text(`Auditor: ${data.auditor} | DNI: ${data.dni_auditor} | Fecha: ${data.fecha} | Hora: ${data.hora}`, ml + 4, 23);
-
-  y = 35;
-
-  // ── INFO GRID
+  // ── DATOS DE LA VERIFICACIÓN ─────────────────────────────────
   const infoFields = [
-    ['Empresa Auditada', data.empresa],
-    ['Nombre del Trabajo', data.nombre_trabajo],
-    ['Ubicación', data.ubicacion],
-    ['Disciplina', data.disciplina],
-    ['Supervisor Operativo', data.sup_operativo],
-    ['Supervisor SHE', data.sup_she],
-    ['Supervisor AAQSA', data.sup_aaqsa],
-    ['N° Trabajadores', data.num_trabajadores]
+    ['Empresa Auditada', data.empresa], ['Nombre del Trabajo', data.nombre_trabajo],
+    ['Ubicación', data.ubicacion],      ['Disciplina', data.disciplina],
+    ['Sup. Operativo', data.sup_operativo], ['Sup. SHE', data.sup_she],
+    ['Sup. AAQSA', data.sup_aaqsa],    ['N° Trabajadores', data.num_trabajadores]
   ];
-
-  doc.setFillColor(...colors.light);
-  doc.rect(ml, y, cw, 30, 'F');
-  doc.setDrawColor(...colors.border);
-  doc.rect(ml, y, cw, 30, 'S');
-
-  const halfCw = (cw - 4) / 2;
-  infoFields.forEach((f, i) => {
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const fx = ml + 3 + col * (halfCw + 4);
-    const fy = y + 4 + row * 7;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(...colors.na);
-    doc.text(f[0] + ':', fx, fy);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...colors.dark);
-    doc.setFontSize(8);
-    doc.text(f[1] || '—', fx + 35, fy);
+  doc.setFillColor(...C.light); doc.rect(ml,y,cw,32,'F');
+  doc.setDrawColor(...C.border); doc.rect(ml,y,cw,32,'S');
+  const hw = (cw-4)/2;
+  infoFields.forEach((f,i) => {
+    const fx = ml+3 + (i%2)*(hw+4), fy = y+5 + Math.floor(i/2)*7.5;
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...C.na);
+    doc.text(f[0]+':', fx, fy);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...C.dark);
+    const val = doc.splitTextToSize(f[1]||'—', hw-38);
+    doc.text(val[0], fx+32, fy);
   });
-
   y += 36;
 
-  // ── RESUMEN PORCENTAJES
-  doc.setFillColor(...colors.red);
-  doc.rect(ml, y, cw, 7, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...colors.white);
-  doc.text('RESUMEN DE CUMPLIMIENTO POR ELEMENTO', ml + 3, y + 5);
-  y += 9;
+  // ── RESUMEN KPI BOXES ─────────────────────────────────────────
+  doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+  doc.text('RESUMEN DE CUMPLIMIENTO POR ELEMENTO', ml+3, y+4.5);
+  y += 8;
 
-  const elemNames = [
-    '1. Supervisor Operativo',
-    '2. Personal / Trabajadores',
-    '3. Supervisor SHE',
-    '4. Recursos',
-    '5. Gestión Ambiental'
-  ];
-
-  const colW = cw / 5;
-  elemNames.forEach((name, i) => {
-    const pct = pctByElem[i + 1];
-    const ex = ml + i * colW;
-
-    doc.setFillColor(...(pct === null ? colors.na : pct >= 80 ? colors.cumple : pct >= 50 ? colors.ep : colors.nc));
-    doc.rect(ex, y, colW - 1, 16, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(...colors.white);
-    const pctStr = pct !== null ? `${pct}%` : 'N/A';
-    const textW = doc.getTextWidth(pctStr);
-    doc.text(pctStr, ex + (colW - 1) / 2 - textW / 2, y + 10);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
-    const lines = doc.splitTextToSize(name, colW - 4);
-    doc.text(lines[0], ex + 2, y + 14);
+  const elemShortNames = ['Sup. Operativo','Personal','Sup. SHE','Recursos','G. Ambiental'];
+  const boxW = cw/5;
+  elemShortNames.forEach((name,i) => {
+    const pct = pctByElem[i+1];
+    const bx = ml + i*boxW;
+    doc.setFillColor(...pctColor(pct));
+    doc.rect(bx, y, boxW-1, 18, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.setTextColor(...C.white);
+    const ps = pct!==null ? pct+'%' : 'N/A';
+    doc.text(ps, bx+(boxW-1)/2, y+11, {align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(6);
+    doc.text(name, bx+(boxW-1)/2, y+16, {align:'center'});
   });
+  y += 21;
 
-  y += 19;
-
-  // General pct box
-  const genColor = pctGeneral >= 80 ? colors.cumple : pctGeneral >= 50 ? colors.ep : colors.nc;
-  doc.setFillColor(...genColor);
-  doc.rect(ml, y, cw, 10, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(...colors.white);
-  doc.text(`CUMPLIMIENTO GENERAL: ${pctGeneral !== null ? pctGeneral + '%' : 'N/A'}`, pw / 2, y + 7, { align: 'center' });
+  // General bar
+  const gc = pctColor(pctGeneral);
+  doc.setFillColor(...gc); doc.rect(ml,y,cw,10,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...C.white);
+  doc.text(`CUMPLIMIENTO GENERAL: ${pctGeneral!==null ? pctGeneral+'%' : 'N/A'}`, pw/2, y+7, {align:'center'});
   y += 14;
 
-  // ── DETALLE POR ELEMENTO
-  CHECKLIST.elementos.forEach((elem, ei) => {
-    const items = elem.criterios.flatMap(c => c.items);
-    const elemPct = pctByElem[elem.id];
+  // ── GRÁFICO DE BARRAS (canvas off-screen) ──────────────────────
+  checkPage(65);
+  doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+  doc.text('GRÁFICO — CUMPLIMIENTO POR ELEMENTO', ml+3, y+4.5);
+  y += 8;
 
-    // Check page space
-    if (y > 240) { doc.addPage(); y = 15; }
+  try {
+    const chartCanvas = document.createElement('canvas');
+    chartCanvas.width = 560; chartCanvas.height = 200;
+    document.body.appendChild(chartCanvas);
+    const chartCtx = chartCanvas.getContext('2d');
+    const barsData = [1,2,3,4,5].map(i => pctByElem[i]??0);
+    const barColors = barsData.map(p => p>=80?'rgba(22,163,74,0.85)':p>=50?'rgba(217,119,6,0.85)':'rgba(220,38,38,0.85)');
+    new Chart(chartCtx, {
+      type:'bar',
+      data:{ labels:elemShortNames, datasets:[{data:barsData,backgroundColor:barColors,borderRadius:6}]},
+      options:{ animation:false, plugins:{legend:{display:false}}, scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}
+    });
+    await new Promise(r=>setTimeout(r,300));
+    const imgBar = chartCanvas.toDataURL('image/png');
+    doc.addImage(imgBar,'PNG',ml,y,cw,45);
+    y += 47;
+    chartCanvas.remove();
+  } catch(e){ y += 5; }
+
+  // ── GRÁFICO DONA distribución C/EP/NC/NA ──────────────────────
+  checkPage(55);
+  const allItemsFlat = CHECKLIST.elementos.flatMap(e=>e.criterios.flatMap(c=>c.items));
+  const dist = {C:0,EP:0,NC:0,NA:0};
+  allItemsFlat.forEach(i => { const c = respuestas[i.id]?.cal; if(c) dist[c]=(dist[c]||0)+1; });
+
+  doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+  doc.text('GRÁFICO — DISTRIBUCIÓN DE CALIFICACIONES', ml+3, y+4.5);
+  y += 8;
+
+  try {
+    const donaCanvas = document.createElement('canvas');
+    donaCanvas.width = 300; donaCanvas.height = 200;
+    document.body.appendChild(donaCanvas);
+    new Chart(donaCanvas.getContext('2d'), {
+      type:'doughnut',
+      data:{
+        labels:['Cumple (C)','En Proceso (EP)','No Cumple (NC)','No Aplica (NA)'],
+        datasets:[{data:[dist.C,dist.EP,dist.NC,dist.NA],
+          backgroundColor:['rgba(22,163,74,0.85)','rgba(217,119,6,0.85)','rgba(220,38,38,0.85)','rgba(107,114,128,0.6)'],
+          borderWidth:2}]
+      },
+      options:{animation:false,plugins:{legend:{position:'right'}}}
+    });
+    await new Promise(r=>setTimeout(r,300));
+    const imgDona = donaCanvas.toDataURL('image/png');
+    doc.addImage(imgDona,'PNG',ml+(cw-80)/2,y,80,50);
+    y += 54;
+    donaCanvas.remove();
+  } catch(e){ y += 5; }
+
+  // ── DETALLE POR ELEMENTO ──────────────────────────────────────
+  CHECKLIST.elementos.forEach((elem) => {
+    const elemPct = pctByElem[elem.id];
+    checkPage(20);
 
     // Elemento header
-    doc.setFillColor(...colors.dark);
-    doc.rect(ml, y, cw, 7, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...colors.white);
-    doc.text(elem.titulo, ml + 3, y + 5);
-    if (elemPct !== null) {
-      doc.setTextColor(...colors.gold);
-      doc.text(`${elemPct}%`, pw - mr - 3, y + 5, { align: 'right' });
-    }
+    doc.setFillColor(...C.dark); doc.rect(ml,y,cw,7,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...C.white);
+    doc.text(elem.titulo, ml+3, y+5);
+    doc.setTextColor(...C.gold);
+    doc.text(elemPct!==null?elemPct+'%':'—', pw-mr-3, y+5, {align:'right'});
     y += 9;
 
-    // Items table header
-    doc.setFillColor(...colors.light);
-    doc.rect(ml, y, cw, 5, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.5);
-    doc.setTextColor(...colors.na);
-    doc.text('#', ml + 2, y + 3.5);
-    doc.text('CRITERIO / INDICADOR', ml + 10, y + 3.5);
-    doc.text('CAL', pw - mr - 22, y + 3.5);
-    doc.text('RESULTADO', pw - mr - 15, y + 3.5);
+    // Column headers
+    doc.setFillColor(...C.light); doc.rect(ml,y,cw,5,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...C.na);
+    doc.text('#', ml+2, y+3.5);
+    doc.text('CRITERIO / INDICADOR', ml+10, y+3.5);
+    doc.text('CAL', pw-mr-22, y+3.5);
+    doc.text('%', pw-mr-5, y+3.5, {align:'right'});
     y += 6;
 
     let itemNum = 0;
     elem.criterios.forEach(crit => {
-      // Subtitulo row
-      if (y > 270) { doc.addPage(); y = 15; }
-      doc.setFillColor(240, 240, 245);
-      doc.rect(ml, y, cw, 5, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7);
-      doc.setTextColor(...colors.red);
-      doc.text(crit.subtitulo, ml + 3, y + 3.5);
+      checkPage(12);
+      doc.setFillColor(240,240,245); doc.rect(ml,y,cw,5,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.red);
+      doc.text(crit.subtitulo, ml+3, y+3.5);
       y += 6;
 
       crit.items.forEach(item => {
         itemNum++;
         const resp = respuestas[item.id];
-        const cal = resp?.cal || '—';
-        const pct = cal !== 'NA' && cal !== '—' ? PCT_MAP[cal] : null;
-
-        if (y > 270) { doc.addPage(); y = 15; }
+        const cal  = resp?.cal || '—';
+        const pct  = cal!=='NA'&&cal!=='—' ? PCT_MAP[cal] : null;
+        checkPage(10);
 
         const rowH = 8;
-        doc.setDrawColor(...colors.border);
-        doc.rect(ml, y, cw, rowH, 'S');
+        if (itemNum%2===0) { doc.setFillColor(250,250,252); doc.rect(ml,y,cw,rowH,'F'); }
+        doc.setDrawColor(...C.border); doc.rect(ml,y,cw,rowH,'S');
 
-        // Background
-        if (itemNum % 2 === 0) {
-          doc.setFillColor(250, 250, 252);
-          doc.rect(ml, y, cw, rowH, 'F');
-        }
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.dark);
+        doc.text(`${itemNum}`, ml+3, y+5.5);
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7);
-        doc.setTextColor(...colors.dark);
-        doc.text(`${itemNum}`, ml + 3, y + 5.5);
+        const lines = doc.splitTextToSize(item.texto, cw-42);
+        doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+        doc.text(lines[0], ml+10, y+5.5);
 
-        const textLines = doc.splitTextToSize(item.texto, cw - 40);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(6.5);
-        doc.text(textLines[0], ml + 10, y + 5.5);
+        const cc = pctColor(pct);
+        doc.setFillColor(...cc);
+        doc.roundedRect(pw-mr-23, y+1.5, 10, 5, 1, 1, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(...C.white);
+        doc.text(cal, pw-mr-18, y+5, {align:'center'});
 
-        // Cal badge
-        const calColor = cal === 'C' ? colors.cumple : cal === 'EP' ? colors.ep : cal === 'NC' ? colors.nc : colors.na;
-        doc.setFillColor(...calColor);
-        doc.roundedRect(pw - mr - 23, y + 1.5, 10, 5, 1, 1, 'F');
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(6);
-        doc.setTextColor(...colors.white);
-        doc.text(cal, pw - mr - 18, y + 5, { align: 'center' });
-
-        // Pct
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.setTextColor(...(pct !== null ? calColor : colors.na));
-        const pctTxt = pct !== null ? `${pct}%` : '—';
-        doc.text(pctTxt, pw - mr - 3, y + 5.5, { align: 'right' });
-
+        doc.setFont('helvetica','bold'); doc.setFontSize(8);
+        doc.setTextColor(...(pct!==null?cc:C.na));
+        doc.text(pct!==null?pct+'%':'—', pw-mr-3, y+5.5, {align:'right'});
         y += rowH;
 
-        // Observación
+        // Observación inline
         if (resp?.obs) {
-          if (y > 270) { doc.addPage(); y = 15; }
-          doc.setFillColor(255, 251, 235);
-          doc.rect(ml, y, cw, 6, 'F');
-          doc.setFont('helvetica', 'italic');
-          doc.setFontSize(6.5);
-          doc.setTextColor(146, 64, 14);
-          const obsText = doc.splitTextToSize(`📝 ${resp.obs}`, cw - 6);
-          doc.text(obsText[0], ml + 3, y + 4);
+          checkPage(8);
+          doc.setFillColor(255,251,235); doc.rect(ml,y,cw,6,'F');
+          doc.setFont('helvetica','italic'); doc.setFontSize(6.5); doc.setTextColor(146,64,14);
+          const ot = doc.splitTextToSize('Obs: '+resp.obs, cw-6);
+          doc.text(ot[0], ml+3, y+4);
           y += 7;
-        }
-
-        // Fotos base64 embebidas en el PDF
-        if (resp?.fotos && resp.fotos.length > 0) {
-          for (const b64 of resp.fotos) {
-            if (y > 240) { doc.addPage(); y = 15; }
-            try {
-              const imgW = 55, imgH = 40;
-              doc.addImage(b64, 'JPEG', ml + 3, y, imgW, imgH);
-              y += imgH + 3;
-            } catch(e) { /* skip bad image */ }
-          }
         }
       });
     });
-
-    y += 4;
+    y += 5;
   });
 
-  // ── FIRMAS
-  if (y > 230) { doc.addPage(); y = 15; }
+  // ── FIRMAS ────────────────────────────────────────────────────
+  checkPage(45);
+  doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...C.white);
+  doc.text('FIRMAS DE CONFORMIDAD', ml+3, y+4.5);
+  y += 8;
 
-  doc.setFillColor(...colors.red);
-  doc.rect(ml, y, cw, 7, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...colors.white);
-  doc.text('FIRMAS DE CONFORMIDAD', ml + 3, y + 5);
-  y += 10;
+  const fw = (cw-4)/2;
+  [['canvas-sup-op','Supervisor Operativo (Contratista)',ml],
+   ['canvas-sup-she','Supervisor SHE (Contratista)',ml+fw+4]
+  ].forEach(([id,label,x]) => {
+    const cv = document.getElementById(id);
+    doc.setDrawColor(...C.border); doc.rect(x,y,fw,28,'S');
+    doc.addImage(cv.toDataURL('image/png'),'PNG',x+2,y+2,fw-4,20);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.na);
+    doc.text(label, x+fw/2, y+26, {align:'center'});
+  });
+  y += 32;
 
-  const firmaW = (cw - 4) / 2;
-  const canvasOp = document.getElementById('canvas-sup-op');
-  const canvasShe = document.getElementById('canvas-sup-she');
+  // ── ANEXO: ÍTEMS CON OBSERVACIÓN Y FOTOS ─────────────────────
+  const itemsConFotos = CHECKLIST.elementos.flatMap(e=>e.criterios.flatMap(c=>c.items))
+    .filter(i => respuestas[i.id]?.obs || (respuestas[i.id]?.fotos||[]).length>0);
 
-  const addFirma = (canvas, label, x) => {
-    doc.setDrawColor(...colors.border);
-    doc.rect(x, y, firmaW, 30, 'S');
-    const imgData = canvas.toDataURL('image/png');
-    doc.addImage(imgData, 'PNG', x + 2, y + 2, firmaW - 4, 22);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(...colors.na);
-    doc.text(label, x + firmaW / 2, y + 27, { align: 'center' });
-  };
+  if (itemsConFotos.length > 0) {
+    doc.addPage(); y = 15;
+    doc.setFillColor(...C.dark); doc.rect(0,0,pw,18,'F');
+    doc.setFillColor(...C.red); doc.rect(0,0,5,18,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...C.white);
+    doc.text('ANEXO — ÍTEMS CON OBSERVACIONES Y EVIDENCIA FOTOGRÁFICA', ml+6, 12);
+    y = 24;
 
-  addFirma(canvasOp, 'Supervisor Operativo (Contratista)', ml);
-  addFirma(canvasShe, 'Supervisor SHE (Contratista)', ml + firmaW + 4);
+    itemsConFotos.forEach((item, idx) => {
+      const resp = respuestas[item.id];
+      const cal  = resp?.cal||'—';
+      const cc   = cal==='C'?C.cumple:cal==='EP'?C.ep:cal==='NC'?C.nc:C.na;
+      checkPage(30);
 
-  y += 35;
+      // Item header bar
+      doc.setFillColor(...cc);
+      doc.roundedRect(ml,y,cw,8,2,2,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+      doc.text(`[${cal}] ${item.id} — ${item.texto.slice(0,90)}${item.texto.length>90?'…':''}`, ml+3, y+5.5);
+      y += 10;
 
-  // Footer
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  doc.text(`Generado: ${new Date().toLocaleString('es-PE')} | Anglo American Quellaveco S.A. — Sistema VCC`, pw / 2, 290, { align: 'center' });
+      // Observación
+      if (resp.obs) {
+        checkPage(12);
+        doc.setFillColor(255,251,235); doc.rect(ml,y,cw,10,'F');
+        doc.setDrawColor(253,224,71); doc.rect(ml,y,cw,10,'S');
+        doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(146,64,14);
+        const obsLines = doc.splitTextToSize('📝 Observación: '+resp.obs, cw-6);
+        obsLines.slice(0,2).forEach((l,i) => doc.text(l, ml+3, y+4.5+i*4));
+        y += 12;
+      }
+
+      // Fotos
+      if ((resp.fotos||[]).length > 0) {
+        const fotoW = 55, fotoH = 42, fotoGap = 4;
+        let fx = ml;
+        let rowStart = y;
+        resp.fotos.forEach((b64, fi) => {
+          if (fx + fotoW > pw - mr) {
+            fx = ml; y = rowStart + fotoH + fotoGap + 8;
+            rowStart = y;
+          }
+          checkPage(fotoH + 14);
+          try {
+            doc.setDrawColor(...C.border);
+            doc.rect(fx, y, fotoW, fotoH, 'S');
+            doc.addImage(b64,'JPEG', fx+1, y+1, fotoW-2, fotoH-2);
+            doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...C.na);
+            doc.text(`Foto ${fi+1}`, fx+fotoW/2, y+fotoH+3.5, {align:'center'});
+          } catch(e) {}
+          fx += fotoW + fotoGap;
+        });
+        y = rowStart + fotoH + 12;
+      }
+      y += 4;
+    });
+  }
+
+  // Footer en todas las páginas
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFillColor(245,245,245); doc.rect(0,287,pw,10,'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(150,150,150);
+    doc.text(`Anglo American Quellaveco S.A. — Sistema VCC | Generado: ${new Date().toLocaleString('es-PE')}`, ml, 292);
+    doc.text(`Página ${i} de ${totalPages}`, pw-mr, 292, {align:'right'});
+  }
 
   return doc.output('blob');
 }
-
 // ══════════════════════════════════════════════
-// WHATSAPP — CallMeBot
+// EMAIL — EmailJS (PDF adjunto)
 // ══════════════════════════════════════════════
-async function sendWhatsApp(pctGeneral, empresa, trabajo, pdfBlob) {
-  const phone = currentSession.whatsapp;
-  if (!phone || !CONFIG.CALLMEBOT_APIKEY || CONFIG.CALLMEBOT_APIKEY === '1957358') {
-    console.warn('WhatsApp no configurado');
-    return;
-  }
+async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
+  const email = currentSession.email;
+  const nombre = `${currentSession.nombres} ${currentSession.apellidos}`;
+  const fecha  = new Date().toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' });
 
-  const msg = encodeURIComponent(
-    `✅ *VERIFICACIÓN COMPLETADA - AAQ*\n\n` +
-    `👷 Auditor: ${currentSession.nombres} ${currentSession.apellidos}\n` +
-    `🏢 Empresa: ${empresa}\n` +
-    `🔧 Trabajo: ${trabajo}\n` +
-    `📊 Cumplimiento General: *${pctGeneral}%*\n` +
-    `📅 Fecha: ${new Date().toLocaleDateString('es-PE')}\n\n` +
-    `_El PDF detallado ha sido guardado en el sistema._`
-  );
-
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${msg}&apikey=${CONFIG.CALLMEBOT_APIKEY}`;
-
-  try {
-    await fetch(url, { mode: 'no-cors' });
-  } catch(e) {
-    console.warn('WhatsApp send error:', e);
-  }
-
-  // Also trigger PDF download for the auditor
+  // Siempre descargar el PDF localmente (garantía de entrega)
   const pdfUrl = URL.createObjectURL(pdfBlob);
   const a = document.createElement('a');
   a.href = pdfUrl;
   a.download = `AAQ_Verificacion_${empresa.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
   a.click();
-  URL.revokeObjectURL(pdfUrl);
+  setTimeout(() => URL.revokeObjectURL(pdfUrl), 3000);
+
+  // Si no hay email o EmailJS no está configurado, salimos aquí
+  const ejs = CONFIG.EMAILJS_SERVICE_ID;
+  if (!email || !ejs || ejs === 'service_4lk395d') {
+    console.warn('EmailJS no configurado o auditor sin email.');
+    return false;
+  }
+
+  try {
+    // Convertir blob a base64 para adjuntar
+    const pdfBase64 = await new Promise((res) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.readAsDataURL(pdfBlob);
+    });
+
+    // Estado de calificaciones para resumen en email
+    const allItems = CHECKLIST.elementos.flatMap(e => e.criterios.flatMap(c => c.items));
+    const resumen = CHECKLIST.elementos.map(e => {
+      const items = e.criterios.flatMap(c => c.items);
+      const pcts = items.filter(i => respuestas[i.id]?.cal && respuestas[i.id].cal !== 'NA');
+      const avg = pcts.length ? Math.round(pcts.reduce((s,i) => s + (PCT_MAP[respuestas[i.id].cal]||0), 0) / pcts.length) : null;
+      return `${e.titulo}: ${avg !== null ? avg + '%' : 'N/A'}`;
+    }).join('\n');
+
+    await emailjs.send(
+      CONFIG.EMAILJS_SERVICE_ID,
+      CONFIG.EMAILJS_TEMPLATE_ID,
+      {
+        to_email:    email,
+        to_name:     nombre,
+        empresa:     empresa,
+        trabajo:     trabajo,
+        pct_general: pctGeneral + '%',
+        fecha:       fecha,
+        resumen:     resumen,
+        pdf_base64:  pdfBase64,
+        pdf_nombre:  `AAQ_Verificacion_${empresa.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`,
+      },
+      CONFIG.EMAILJS_PUBLIC_KEY
+    );
+    return true;
+  } catch(err) {
+    console.error('EmailJS error:', err);
+    return false;
+  }
 }
 
 // ══════════════════════════════════════════════
