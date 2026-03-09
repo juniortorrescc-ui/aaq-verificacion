@@ -1343,7 +1343,8 @@ function loadReporte() {
 
   // Distribución C/EP/NC/NA de observaciones
   // Distribución C/EP/NC aproximada desde pct_general (56 ítems por auditoría)
-  const dist = {C:0, EP:0, NC:0, NA:0};
+  window._distCalif = {C:0, EP:0, NC:0, NA:0};
+  const dist = window._distCalif;
   filtered.forEach(a => {
     const pct = parseFloat(a.pct_general);
     if (isNaN(pct)) return;
@@ -1523,7 +1524,11 @@ function loadReporte() {
           datasets:[{data:[dist.C,dist.EP,dist.NC,dist.NA],
             backgroundColor:['rgba(22,163,74,0.85)','rgba(217,119,6,0.85)','rgba(220,38,38,0.85)','rgba(107,114,128,0.6)'],
             borderWidth:2}]},
-        options:{responsive:true,plugins:{legend:{position:'right'}}}
+        options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+          const total=ctx.dataset.data.reduce((s,v)=>s+v,0);
+          const pct=total>0?Math.round(ctx.parsed/total*100):0;
+          return ` ${ctx.label}: ${pct}%`;
+        }}}}}
       });
     }
     // ─── Análisis automático ──────────────────────────────────────
@@ -1781,26 +1786,37 @@ async function exportarReportePDF() {
       doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
       doc.text('EVOLUCION TEMPORAL  |  DISTRIBUCION DE CALIFICACIONES', ml+3, y+4.5); y+=8;
       const hw = (cw-4)/2;
-      // Linea temporal en mitad izquierda
-      doc.addImage(rptLineaCanvas.toDataURL('image/png'),'PNG', ml, y, hw, 52);
-      // Dona en mitad derecha — mas grande para leyenda legible
-      doc.addImage(rptDonaCanvas.toDataURL('image/png'),'PNG', ml+hw+4, y, hw, 52);
-      // Leyenda manual dona (jsPDF no escala bien la leyenda del canvas)
-      const legendX = ml+hw+6;
-      const legendY = y+54;
+      // Linea temporal — mitad izquierda
+      doc.addImage(rptLineaCanvas.toDataURL('image/png'),'PNG', ml, y, hw, 50);
+
+      // Dona — mitad derecha, sin leyenda interna
+      const donaSize = 46;
+      const donaX = ml + hw + 4;
+      doc.addImage(rptDonaCanvas.toDataURL('image/png'),'PNG', donaX, y, donaSize, donaSize);
+
+      // Calcular totales para leyenda con porcentajes
+      const _d = window._distCalif || {C:0,EP:0,NC:0,NA:0};
+      const distTot = _d.C + _d.EP + _d.NC + _d.NA || 1;
       const legendItems = [
-        {label:'Cumple (C)',        color:C.cumple},
-        {label:'En Proceso (EP)',   color:C.ep},
-        {label:'No Cumple (NC)',    color:C.nc},
-        {label:'No Aplica (NA)',    color:C.na},
+        {label:'Cumple',      color:C.cumple, val:_d.C},
+        {label:'En Proceso',  color:C.ep,     val:_d.EP},
+        {label:'No Cumple',   color:C.nc,     val:_d.NC},
+        {label:'No Aplica',   color:C.na,     val:_d.NA},
       ];
-      legendItems.forEach((li, i) => {
+      // Leyenda vertical a la derecha de la dona
+      const legX = donaX + donaSize + 4;
+      let legY = y + 8;
+      legendItems.forEach(li => {
+        const pct = Math.round(li.val / distTot * 100);
         doc.setFillColor(...li.color);
-        doc.rect(legendX + i*44, legendY, 6, 4, 'F');
-        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.dark);
-        doc.text(li.label, legendX + i*44 + 8, legendY+3.5);
+        doc.roundedRect(legX, legY, 5, 5, 1, 1, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...li.color);
+        doc.text(pct+'%', legX + 7, legY + 4);
+        doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...C.dark);
+        doc.text(li.label, legX + 7, legY + 9);
+        legY += 13;
       });
-      y += 64;
+      y += 54;
     }
 
     // TABLA RANKING
