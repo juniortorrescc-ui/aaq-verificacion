@@ -459,6 +459,7 @@ async function loginAuditor() {
       nombres: user.nombres,
       apellidos: user.apellidos,
       whatsapp: user.whatsapp,
+      email: user.email || '',
       area: user.area,
       timestamp: Date.now()
     };
