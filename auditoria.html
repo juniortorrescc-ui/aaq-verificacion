@@ -1597,7 +1597,9 @@ async function enviarVerificacion() {
     hideSpinner();
     const emailMsg = emailEnviado
       ? `\n📧 PDF enviado a: ${currentSession.email}`
-      : '\n⚠️ El PDF se descargó localmente (configura EmailJS para envío automático).';
+      : currentSession.email
+        ? `\n⚠️ Error al enviar email a ${currentSession.email}. Revisa EmailJS History.`
+        : '\n⚠️ El auditor no tiene correo registrado en el sistema.';
 
     alert(`✅ Verificación enviada correctamente.\n\nCumplimiento General: ${pctGeneral}%${emailMsg}`);
 
@@ -1931,10 +1933,13 @@ async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(pdfUrl), 3000);
 
-  // Si no hay email o EmailJS no está configurado, salimos aquí
-  const ejs = CONFIG.EMAILJS_SERVICE_ID;
-  if (!email || !ejs || ejs === 'service_4lk395d') {
-    console.warn('EmailJS no configurado o auditor sin email.');
+  // Si no hay email del auditor, salimos (EmailJS ya está configurado)
+  if (!email) {
+    console.warn('Auditor sin email registrado en Sheets.');
+    return false;
+  }
+  if (!CONFIG.EMAILJS_SERVICE_ID || !CONFIG.EMAILJS_TEMPLATE_ID || !CONFIG.EMAILJS_PUBLIC_KEY) {
+    console.warn('EmailJS credentials missing.');
     return false;
   }
 
