@@ -1166,13 +1166,21 @@ function renderHistorial(data) {
 }
 
 function parseFotos(auditoriaRow) {
-  // Las fotos están en columnas foto_1, foto_2, foto_3, ...
+  // Primero intentar leer columna "fotos" (JSON array guardado en una sola celda)
+  if (auditoriaRow['fotos'] && auditoriaRow['fotos'].length > 10) {
+    try {
+      const arr = JSON.parse(auditoriaRow['fotos']);
+      if (Array.isArray(arr) && arr.length > 0) {
+        return arr.map(v => v.startsWith('data:') ? v : 'data:image/jpeg;base64,' + v);
+      }
+    } catch(e) {}
+  }
+  // Fallback: columnas foto_1, foto_2, ...
   const fotos = [];
   for (let i = 1; i <= 50; i++) {
     const key = `foto_${i}`;
     const val = auditoriaRow[key];
     if (val && val.length > 100) {
-      // Asegurar prefijo data:image
       const src = val.startsWith('data:') ? val : 'data:image/jpeg;base64,' + val;
       fotos.push(src);
     } else if (!val) {
