@@ -1571,23 +1571,23 @@ async function exportarReportePDF() {
 
     const recomendaciones = [];
     if (promA >= 80) {
-      recomendaciones.push('✅ El desempeño general del período es ACEPTABLE. Mantener los estándares actuales y continuar con las verificaciones periódicas.');
+      recomendaciones.push('[OK] DESEMPENO ACEPTABLE: Mantener los estandares actuales y continuar con las verificaciones periodicas.');
     } else if (promA >= 60) {
-      recomendaciones.push('⚠️ El desempeño está EN PROCESO. Se recomienda reforzar los planes de acción correctiva para alcanzar el nivel aceptable (≥80%).');
+      recomendaciones.push('[ALERTA] DESEMPENO EN PROCESO: Reforzar planes de accion correctiva para alcanzar el nivel aceptable (>=80%).');
     } else {
-      recomendaciones.push('❌ El desempeño es CRÍTICO. Se requiere intervención inmediata: reunión de emergencia con supervisores y plan correctivo urgente.');
+      recomendaciones.push('[CRITICO] DESEMPENO CRITICO: Se requiere intervencion inmediata. Reunion de emergencia con supervisores y plan correctivo urgente.');
     }
-    recomendaciones.push(`📊 Elemento más débil: "${elemNombresA[peorElemA]}" con ${elemAvgsA[peorElemA]}%. Priorizar capacitaciones y controles en esta área.`);
-    recomendaciones.push(`💪 Elemento más fuerte: "${elemNombresA[mejorElemA]}" con ${elemAvgsA[mejorElemA]}%. Documentar buenas prácticas para replicarlas.`);
+    recomendaciones.push(`[DEBIL] Elemento mas debil: "${elemNombresA[peorElemA]}" con ${elemAvgsA[peorElemA]}%. Priorizar capacitaciones y controles en esta area.`);
+    recomendaciones.push(`[FUERTE] Elemento mas fuerte: "${elemNombresA[mejorElemA]}" con ${elemAvgsA[mejorElemA]}%. Documentar buenas practicas para replicarlas.`);
     if (tendenciaA.includes('NEGATIVA')) {
-      recomendaciones.push('📉 La tendencia del período es NEGATIVA. Revisar cambios recientes en personal, procesos o condiciones de trabajo que puedan explicar el descenso.');
+      recomendaciones.push('[TENDENCIA] La tendencia del periodo es NEGATIVA. Revisar cambios recientes en personal, procesos o condiciones de trabajo.');
     } else if (tendenciaA.includes('POSITIVA')) {
-      recomendaciones.push('📈 La tendencia del período es POSITIVA. Las acciones correctivas implementadas están dando resultados. Continuar con el seguimiento.');
+      recomendaciones.push('[TENDENCIA] La tendencia del periodo es POSITIVA. Las acciones correctivas estan dando resultados. Continuar seguimiento.');
     }
     if (empRowsA.length > 1) {
-      recomendaciones.push(`🏢 Empresa que requiere mayor seguimiento: "${empRowsA[empRowsA.length-1].emp}" con ${empRowsA[empRowsA.length-1].pct}%. Coordinar visita de verificación adicional.`);
+      recomendaciones.push(`[SEGUIMIENTO] Empresa que requiere mayor atencion: "${empRowsA[empRowsA.length-1].emp}" con ${empRowsA[empRowsA.length-1].pct}%. Coordinar visita adicional.`);
     }
-    recomendaciones.push(`📅 Próxima verificación recomendada: ${promA<60?'INMEDIATA (dentro de 7 días)':promA<80?'Quincenal':'Mensual según programa establecido'}.`);
+    recomendaciones.push(`[PROXIMA] Proxima verificacion recomendada: ${promA<60?'INMEDIATA (dentro de 7 dias)':promA<80?'Quincenal':'Mensual segun programa establecido'}.`);
 
     recomendaciones.forEach((rec, i) => {
       checkPage(12);
@@ -1626,14 +1626,31 @@ async function exportarReportePDF() {
     const rptLineaCanvas = document.getElementById('rpt-chart-linea');
     const rptDonaCanvas  = document.getElementById('rpt-chart-dona');
     if (rptLineaCanvas && rptDonaCanvas) {
-      checkPage(60);
+      checkPage(75);
       doc.setFillColor(...C.red); doc.rect(ml,y,cw,6,'F');
       doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
-      doc.text('EVOLUCIÓN TEMPORAL  |  DISTRIBUCIÓN DE CALIFICACIONES', ml+3, y+4.5); y+=8;
+      doc.text('EVOLUCION TEMPORAL  |  DISTRIBUCION DE CALIFICACIONES', ml+3, y+4.5); y+=8;
       const hw = (cw-4)/2;
-      doc.addImage(rptLineaCanvas.toDataURL('image/png'),'PNG',ml,y,hw,44);
-      doc.addImage(rptDonaCanvas.toDataURL('image/png'),'PNG',ml+hw+4,y,hw,44);
-      y+=47;
+      // Linea temporal en mitad izquierda
+      doc.addImage(rptLineaCanvas.toDataURL('image/png'),'PNG', ml, y, hw, 52);
+      // Dona en mitad derecha — mas grande para leyenda legible
+      doc.addImage(rptDonaCanvas.toDataURL('image/png'),'PNG', ml+hw+4, y, hw, 52);
+      // Leyenda manual dona (jsPDF no escala bien la leyenda del canvas)
+      const legendX = ml+hw+6;
+      const legendY = y+54;
+      const legendItems = [
+        {label:'Cumple (C)',        color:C.cumple},
+        {label:'En Proceso (EP)',   color:C.ep},
+        {label:'No Cumple (NC)',    color:C.nc},
+        {label:'No Aplica (NA)',    color:C.na},
+      ];
+      legendItems.forEach((li, i) => {
+        doc.setFillColor(...li.color);
+        doc.rect(legendX + i*44, legendY, 6, 4, 'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.dark);
+        doc.text(li.label, legendX + i*44 + 8, legendY+3.5);
+      });
+      y += 64;
     }
 
     // TABLA RANKING
@@ -1674,48 +1691,98 @@ async function exportarReportePDF() {
       y+=7;
     });
 
-    // DETALLE CON FOTOS POR AUDITORÍA
+    // DETALLE POR AUDITORIA — con observaciones y fotos por item
     doc.addPage(); y=15;
     doc.setFillColor(...C.dark); doc.rect(0,0,pw,18,'F');
     doc.setFillColor(...C.red); doc.rect(0,0,5,18,'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...C.white);
-    doc.text('DETALLE DE VERIFICACIONES CON EVIDENCIA FOTOGRÁFICA', ml+6, 12);
+    doc.text('DETALLE DE VERIFICACIONES CON OBSERVACIONES Y EVIDENCIA', ml+6, 12);
     y=24;
 
     reporteData.slice().reverse().forEach(a => {
-      checkPage(25);
+      checkPage(30);
       const pct = parseFloat(a.pct_general);
-      const pc  = [getPctColor(pct)].flat();
+      const pcColor = pct>=80?C.cumple:pct>=60?C.ep:C.nc;
 
-      // Auditoría mini-header
-      doc.setFillColor(...pc); doc.rect(ml,y,cw,7,'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
-      doc.text(`${a.empresa||'—'}  |  ${a.fecha||''}  |  Auditor: ${a.auditor||'—'}  |  ${!isNaN(pct)?pct+'%':'—'}`, ml+3, y+5);
+      // ── Header auditoría ──────────────────────────────────────
+      doc.setFillColor(...pcColor); doc.rect(ml,y,cw,8,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...C.white);
+      doc.text(`${a.empresa||'—'}  |  ${a.fecha||''}  |  Auditor: ${a.auditor||'—'}  |  ${!isNaN(pct)?pct+'%':'—'}`, ml+3, y+5.5);
+      y+=10;
+
+      // ── Datos básicos ─────────────────────────────────────────
+      doc.setFillColor(245,245,248); doc.rect(ml,y,cw,7,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.dark);
+      doc.text(`Trabajo: ${a.nombre_trabajo||'—'}  |  Sup. Operativo: ${a.sup_operativo||'—'}  |  Sup. SHE: ${a.sup_she||'—'}`, ml+3, y+4.5);
       y+=9;
 
-      // Datos básicos
-      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.dark);
-      doc.text(`Trabajo: ${a.nombre_trabajo||'—'}  |  Sup. Operativo: ${a.sup_operativo||'—'}  |  Sup. SHE: ${a.sup_she||'—'}`, ml+3, y+4);
-      y+=7;
+      // ── Observaciones con fotos ───────────────────────────────
+      // Parse observaciones JSON (guarda id, cal, obs, num_fotos)
+      let obsItems = [];
+      try { obsItems = JSON.parse(a.observaciones||'[]'); } catch(e){}
+      // Collect all fotos from foto_1, foto_2... columns
+      const todasFotos = parseFotos(a);
 
-      // Fotos en fila
-      const fotos = parseFotos(a);
-      if (fotos.length>0) {
-        const fW=38, fH=29, gap=3;
-        let fx=ml+3, fy=y;
-        fotos.forEach((f,fi)=>{
-          if(fx+fW>pw-mr){ fx=ml+3; fy+=fH+6; y=fy; checkPage(fH+10); }
-          try {
-            doc.setDrawColor(...C.border); doc.rect(fx,fy,fW,fH,'S');
-            doc.addImage(f,'JPEG',fx+0.5,fy+0.5,fW-1,fH-1);
-            doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(...C.na);
-            doc.text(`Foto ${fi+1}`, fx+fW/2, fy+fH+3, {align:'center'});
-          } catch(e){}
-          fx+=fW+gap;
+      if (obsItems.length === 0 && todasFotos.length === 0) {
+        doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(...C.na);
+        doc.text('Sin observaciones ni evidencia fotografica en esta verificacion.', ml+3, y+4);
+        y+=8;
+      } else {
+        // Show items with observations
+        obsItems.forEach((obs, oi) => {
+          if (!obs.obs && !obs.num_fotos) return;
+          checkPage(16);
+
+          // Item row
+          const calColor = obs.cal==='C'?C.cumple:obs.cal==='EP'?C.ep:obs.cal==='NC'?C.nc:C.na;
+          doc.setFillColor(...calColor);
+          doc.rect(ml+2, y, 8, 6, 'F');
+          doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...C.white);
+          doc.text(obs.cal||'—', ml+6, y+4.3, {align:'center'});
+
+          doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.dark);
+          doc.text(`Item ${obs.id}`, ml+12, y+4.3);
+
+          if (obs.obs) {
+            checkPage(10);
+            const obsLines = doc.splitTextToSize(`Observacion: ${obs.obs}`, cw-16);
+            doc.setFillColor(255,251,235); doc.rect(ml+2,y+7,cw-4, obsLines.length*4.5+4,'F');
+            doc.setFont('helvetica','italic'); doc.setFontSize(6.5); doc.setTextColor(146,64,14);
+            obsLines.forEach((l,li) => doc.text(l, ml+5, y+10+li*4.5));
+            y += obsLines.length*4.5+12;
+          } else {
+            y+=8;
+          }
         });
-        y = fy+fH+8;
+
+        // Photos grid — all photos for this auditoría
+        if (todasFotos.length > 0) {
+          checkPage(20);
+          doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.dark);
+          doc.text(`Evidencia fotografica (${todasFotos.length} foto(s)):`, ml+3, y+4);
+          y+=7;
+
+          const fW=44, fH=33, gap=3;
+          let fx=ml+3, rowY=y;
+          todasFotos.forEach((f,fi)=>{
+            if(fx+fW > pw-mr){ fx=ml+3; rowY+=fH+8; y=rowY; checkPage(fH+12); }
+            try {
+              doc.setDrawColor(...C.border); doc.setFillColor(248,248,248);
+              doc.rect(fx,rowY,fW,fH,'FD');
+              doc.addImage(f,'JPEG',fx+0.5,rowY+0.5,fW-1,fH-1);
+              doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...C.na);
+              doc.text(`Foto ${fi+1}`, fx+fW/2, rowY+fH+4, {align:'center'});
+            } catch(e){}
+            fx+=fW+gap;
+          });
+          y = rowY+fH+10;
+        }
       }
-      y+=4;
+
+      // Separador
+      doc.setDrawColor(...C.border);
+      doc.line(ml, y, pw-mr, y);
+      y+=6;
     });
 
     // Footer todas las páginas
