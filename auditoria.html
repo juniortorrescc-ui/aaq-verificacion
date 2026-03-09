@@ -880,9 +880,8 @@
 // CONFIGURACIÓN
 // ============================================================
 const CONFIG = {
-  SHEETBEST_URL: 'https://api.sheetbest.com/sheets/TU-ID-AQUI',
-  CALLMEBOT_APIKEY: 'TU-APIKEY-CALLMEBOT',
-  IMGUR_CLIENT_ID: 'TU-CLIENT-ID-IMGUR'
+  SHEETBEST_URL: 'https://api.sheetbest.com/sheets/5892a5ad-bcbb-4505-bd68-762fba3f05fe',
+  CALLMEBOT_APIKEY: '1957358',
 };
 
 // ============================================================
@@ -1266,48 +1265,62 @@ function updateProgress() {
 }
 
 // ══════════════════════════════════════════════
-// FOTOS — IMGUR
+// FOTOS — BASE64 DIRECTO A GOOGLE SHEETS
+// Comprime a 1200px JPEG ~300KB → base64 ~400KB por foto
+// Google Sheets acepta hasta 50,000 chars por celda.
+// Las fotos se guardan en celdas separadas: foto_1, foto_2, ... foto_N
 // ══════════════════════════════════════════════
 function triggerFotoInput(itemId) {
   document.getElementById(`file-input-${itemId}`).click();
 }
 
-async function compressImage(file, maxPx = 1200, quality = 0.82) {
-  return new Promise((resolve) => {
+// Comprime imagen a máx 1200px, calidad 0.80, devuelve base64 string
+async function compressToBase64(file, maxPx = 1200, quality = 0.80) {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let w = img.width, h = img.height;
+        // Escalar si es más grande que maxPx
         if (w > maxPx || h > maxPx) {
           if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
           else { w = Math.round(w * maxPx / h); h = maxPx; }
         }
-        canvas.width = w; canvas.height = h;
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-        canvas.toBlob(resolve, 'image/jpeg', quality);
+        const base64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(base64); // data:image/jpeg;base64,/9j/...
       };
+      img.onerror = reject;
       img.src = e.target.result;
     };
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
-async function uploadToImgur(blob) {
-  const formData = new FormData();
-  formData.append('image', blob);
-
-  const res = await fetch('https://api.imgur.com/3/image', {
-    method: 'POST',
-    headers: { Authorization: `Client-ID ${CONFIG.IMGUR_CLIENT_ID}` },
-    body: formData
+// Re-comprime un base64 existente a menor tamaño para guardar en Sheets
+async function recompressBase64(base64str, maxPx = 800, quality = 0.65) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxPx || h > maxPx) {
+        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+        else { w = Math.round(w * maxPx / h); h = maxPx; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(base64str); // fallback: devuelve original
+    img.src = base64str;
   });
-
-  if (!res.ok) throw new Error('Error subiendo a Imgur');
-  const data = await res.json();
-  return data.data.link;
 }
 
 async function handleFotoUpload(input, itemId) {
@@ -1318,13 +1331,12 @@ async function handleFotoUpload(input, itemId) {
   uploadingEl.classList.add('show');
 
   try {
-    const compressed = await compressImage(file, 1200, 0.82);
-    const url = await uploadToImgur(compressed);
-
-    respuestas[itemId].fotos.push(url);
-    addFotoThumb(itemId, url, respuestas[itemId].fotos.length - 1);
+    const base64 = await compressToBase64(file, 1200, 0.80);
+    // Guardamos el base64 completo en el estado
+    respuestas[itemId].fotos.push(base64);
+    addFotoThumb(itemId, base64, respuestas[itemId].fotos.length - 1);
   } catch(err) {
-    alert('Error al subir la foto. Verifica tu conexión.');
+    alert('Error al procesar la foto. Intenta de nuevo.');
     console.error(err);
   } finally {
     uploadingEl.classList.remove('show');
@@ -1332,27 +1344,35 @@ async function handleFotoUpload(input, itemId) {
   }
 }
 
-function addFotoThumb(itemId, url, idx) {
+function addFotoThumb(itemId, base64, idx) {
   const zone = document.getElementById(`foto-zone-${itemId}`);
   const addBtn = zone.querySelector('.btn-add-foto');
 
   const item = document.createElement('div');
   item.className = 'foto-item';
   item.id = `foto-item-${itemId}-${idx}`;
+  // Usamos el base64 directamente como src — se muestra de inmediato sin red
   item.innerHTML = `
-    <img src="${url}" class="foto-thumb" onclick="window.open('${url}','_blank')">
+    <img src="${base64}" class="foto-thumb" onclick="openFotoFull('${itemId}', ${idx})">
     <button class="foto-delete" onclick="deleteFoto('${itemId}', ${idx})">×</button>
   `;
 
   zone.insertBefore(item, addBtn);
 }
 
+function openFotoFull(itemId, idx) {
+  const src = respuestas[itemId].fotos[idx];
+  const win = window.open('', '_blank');
+  win.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh">
+    <img src="${src}" style="max-width:100%;max-height:100vh;object-fit:contain">
+  </body></html>`);
+}
+
 function deleteFoto(itemId, idx) {
   respuestas[itemId].fotos.splice(idx, 1);
-  // Re-render foto zone
   const zone = document.getElementById(`foto-zone-${itemId}`);
   zone.querySelectorAll('.foto-item').forEach(el => el.remove());
-  respuestas[itemId].fotos.forEach((url, i) => addFotoThumb(itemId, url, i));
+  respuestas[itemId].fotos.forEach((b64, i) => addFotoThumb(itemId, b64, i));
 }
 
 // ══════════════════════════════════════════════
@@ -1488,7 +1508,7 @@ async function enviarVerificacion() {
 
     const pctGeneral = getTotalPct();
 
-    // Build observaciones summary
+    // Recopilar observaciones (sin base64 inline)
     const allItems = CHECKLIST.elementos.flatMap(e => e.criterios.flatMap(c => c.items));
     const obsItems = allItems.filter(i => respuestas[i.id].obs || (respuestas[i.id].fotos && respuestas[i.id].fotos.length > 0));
 
@@ -1497,24 +1517,25 @@ async function enviarVerificacion() {
         id: i.id,
         cal: respuestas[i.id].cal,
         obs: respuestas[i.id].obs,
-        fotos: respuestas[i.id].fotos
+        num_fotos: (respuestas[i.id].fotos || []).length
       }))
     );
 
-    // All fotos as JSON per item
-    const fotosJSON = JSON.stringify(
-      Object.fromEntries(
-        allItems
-          .filter(i => respuestas[i.id].fotos && respuestas[i.id].fotos.length > 0)
-          .map(i => [i.id, respuestas[i.id].fotos])
-      )
-    );
+    // Recopilar TODAS las fotos en array plano y re-comprimir a 800px/0.65
+    // -> cada celda de Sheets < 50,000 caracteres
+    const todasLasFotos = [];
+    for (const item of allItems) {
+      for (const b64 of (respuestas[item.id].fotos || [])) {
+        const recomp = await recompressBase64(b64, 800, 0.65);
+        todasLasFotos.push(recomp);
+      }
+    }
 
     // Firma data
     const firmaOp = document.getElementById('canvas-sup-op').toDataURL('image/png');
     const firmaShe = document.getElementById('canvas-sup-she').toDataURL('image/png');
 
-    // 2. Save to SheetBest
+    // 2. Guardar en SheetBest — fotos en columnas foto_1, foto_2, foto_N
     const rowData = {
       timestamp: now.toISOString(),
       empresa,
@@ -1536,10 +1557,12 @@ async function enviarVerificacion() {
       pct_elem5: pctByElem[5] !== null ? pctByElem[5] : 'N/A',
       pct_general: pctGeneral !== null ? pctGeneral : 'N/A',
       observaciones: observacionesJSON,
-      fotos: fotosJSON,
       firma_sup_op: firmaOp,
       firma_sup_she: firmaShe
     };
+
+    // Añadir cada foto en su propia columna
+    todasLasFotos.forEach((b64, i) => { rowData[`foto_${i + 1}`] = b64; });
 
     await fetch(`${CONFIG.SHEETBEST_URL}/tabs/auditorias`, {
       method: 'POST',
@@ -1805,14 +1828,16 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
           y += 7;
         }
 
-        // Foto URLs
+        // Fotos base64 embebidas en el PDF
         if (resp?.fotos && resp.fotos.length > 0) {
-          if (y > 270) { doc.addPage(); y = 15; }
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(5.5);
-          doc.setTextColor(...colors.na);
-          doc.text(`📷 ${resp.fotos.length} foto(s): ${resp.fotos.slice(0,2).join(' | ')}`, ml + 3, y + 3);
-          y += 5;
+          for (const b64 of resp.fotos) {
+            if (y > 240) { doc.addPage(); y = 15; }
+            try {
+              const imgW = 55, imgH = 40;
+              doc.addImage(b64, 'JPEG', ml + 3, y, imgW, imgH);
+              y += imgH + 3;
+            } catch(e) { /* skip bad image */ }
+          }
         }
       });
     });
@@ -1864,7 +1889,7 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
 // ══════════════════════════════════════════════
 async function sendWhatsApp(pctGeneral, empresa, trabajo, pdfBlob) {
   const phone = currentSession.whatsapp;
-  if (!phone || !CONFIG.CALLMEBOT_APIKEY || CONFIG.CALLMEBOT_APIKEY === 'TU-APIKEY-CALLMEBOT') {
+  if (!phone || !CONFIG.CALLMEBOT_APIKEY || CONFIG.CALLMEBOT_APIKEY === '1957358') {
     console.warn('WhatsApp no configurado');
     return;
   }
