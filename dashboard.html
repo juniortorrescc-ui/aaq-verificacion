@@ -709,7 +709,7 @@
 // CONFIG
 // ══════════════════════════════════════════════
 const CONFIG = {
-  SHEETBEST_URL: 'https://api.sheetbest.com/sheets/TU-ID-AQUI'
+  SHEETBEST_URL: 'https://api.sheetbest.com/sheets/5892a5ad-bcbb-4505-bd68-762fba3f05fe'
 };
 
 let allAuditorias = [];
@@ -1004,7 +1004,7 @@ function renderHistorial(data) {
 
   grid.innerHTML = sorted.map(a => {
     const pct = parseFloat(a.pct_general);
-    const fotos = parseFotos(a.fotos);
+    const fotos = parseFotos(a); // pasa la fila completa para leer foto_1, foto_2...
 
     return `
       <div class="auditoria-card">
@@ -1028,15 +1028,18 @@ function renderHistorial(data) {
   }).join('');
 }
 
-function parseFotos(fotosStr) {
-  if (!fotosStr) return [];
-  try {
-    const parsed = JSON.parse(fotosStr);
-    if (typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return Object.values(parsed).flat();
+function parseFotos(auditoriaRow) {
+  // Las fotos están en columnas foto_1, foto_2, foto_3, ...
+  const fotos = [];
+  for (let i = 1; i <= 30; i++) {
+    const key = `foto_${i}`;
+    if (auditoriaRow[key] && auditoriaRow[key].startsWith('data:image')) {
+      fotos.push(auditoriaRow[key]);
+    } else if (!auditoriaRow[key]) {
+      break; // no hay más fotos
     }
-    return Array.isArray(parsed) ? parsed : [];
-  } catch(e) { return []; }
+  }
+  return fotos;
 }
 
 function filterHistorial() {
