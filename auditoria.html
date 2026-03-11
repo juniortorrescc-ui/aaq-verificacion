@@ -803,7 +803,7 @@
         <input type="text" id="sup-she" placeholder="Nombre completo">
       </div>
       <div class="field-group">
-        <label>Supervisor AAQSA</label>
+        <label>Supervisor AAQSA - DIMARZA</label>
         <input type="text" id="sup-aaqsa" placeholder="Nombre completo">
       </div>
       <div class="field-group">
@@ -886,10 +886,8 @@
 // ============================================================
 const CONFIG = {
   SHEETBEST_URL: 'https://api.sheetbest.com/sheets/5892a5ad-bcbb-4505-bd68-762fba3f05fe',
-  // EmailJS — Registrate en emailjs.com (gratis) y completa estos 3 datos:
-  EMAILJS_SERVICE_ID:  'service_4lk395d',    // ej: 'service_abc123'
-  EMAILJS_TEMPLATE_ID: 'template_ohagk2f',   // ej: 'template_xyz789'
-  EMAILJS_PUBLIC_KEY:  'jfs-lUeazoZ4EQ2FY',    // ej: 'user_AbCdEfGhIjKlMn'
+  // Google Drive Web App URL — pegar aquí cuando crees el Apps Script
+  DRIVE_WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxPW7y3E5tF6c3CELOpGkXr0wjHK4Dp2x1ol0SlgaatufcwulDpoicsRGbYxKDavIpf/exec', // Instrucciones abajo en comentario
 };
 
 
@@ -909,71 +907,46 @@ const CHECKLIST = {
       id: 1, titulo: "1. SUPERVISOR OPERATIVO (CONTRATISTA)",
       criterios: [
         { subtitulo: "1.1 Gestión de Riesgos", items: [
-          { id:"1.1.1", texto:"¿Ha elaborado y conoce la Matriz IPERC Línea Base de las tareas bajo su supervisión? ¿Tiene el documento disponible en el área de trabajo, puede relacionarla con los estándares SHE de AAQSA aplicables (ESO, procedimientos) y explicar los controles identificados?" },
-          { id:"1.1.2", texto:"¿Ha elaborado y conoce el PETS de las tareas bajo su supervisión? ¿Puede explicar los pasos detallados, recursos, controles críticos y controles adicionales contemplados?" },
-          { id:"1.1.3", texto:"¿Conoce los Estándares Críticos de Fatales (ECF) de Anglo American aplicables a las tareas que supervisa y demuestra competencia para implementar los controles críticos correspondientes?" },
-          { id:"1.1.4", texto:"¿Se ha asegurado de contar con todos los recursos necesarios (personal, equipos, herramientas, materiales, EPP) contemplados en los PETS y que estos se encuentren en condiciones operativas para completar la tarea de forma segura?" },
-          { id:"1.1.5", texto:"¿Ha identificado todas las fuentes de energía presentes en la tarea y verificado su correcto aislamiento y bloqueo conforme al Estándar de Aislamiento de Energía de AAQSA (AA-QLL-SHE-ESO-0028)?" },
-          { id:"1.1.6", texto:"¿Ha asegurado que las condiciones físicas del área de trabajo (orden, limpieza, almacenamiento, libre tránsito, señalización y demarcación) sean las adecuadas antes de iniciar la tarea?" },
-          { id:"1.1.7", texto:"¿Ha identificado y controlado los peligros de la tarea y del entorno (nivel superior, inferior, alrededores)? ¿Estos están registrados en el ATS/IPERC Continuo con sus controles específicos?" },
-          { id:"1.1.8", texto:"¿Tiene identificadas las posibles situaciones de emergencia de la tarea, conoce los números de contacto de emergencia de AAQSA (médico, ambulancia, brigada) y su equipo sabe cómo actuar?" }
+          { id:"1.1.1", texto:"¿Conoce la Matriz IPERC Línea Base de las tareas bajo su supervisión? ¿Tiene el documento disponible en el área de trabajo, puede relacionarla con los estándares SHE de AAQSA aplicables (ESO, procedimientos) y explicar los controles identificados?" },
+          { id:"1.1.2", texto:"¿Conoce el PETS de las tareas bajo su supervisión? ¿Puede explicar los pasos detallados, recursos, controles críticos y controles adicionales contemplados?" },
+          { id:"1.1.3", texto:"¿Ha asegurado que las condiciones físicas del área de trabajo (orden, limpieza, almacenamiento, libre tránsito, señalización y demarcación) sean las adecuadas antes de iniciar la tarea?" },
         ]},
         { subtitulo: "1.2 Gestión de Competencias del Personal", items: [
-          { id:"1.2.1", texto:"¿Ha verificado que sus trabajadores conocen, entienden y aplican el PETS, la Matriz IPERC Línea Base y los controles críticos de los ECF aplicables a las tareas que realizan?" },
+          { id:"1.2.1", texto:"¿Ha verificado que sus trabajadores conocen, entienden y aplican el PETS, la Matriz IPERC Línea Base y los controles críticos aplicables a las tareas que realizan?" },
           { id:"1.2.2", texto:"¿Ha asegurado que todos sus trabajadores cuentan con las acreditaciones, certificaciones y habilitaciones vigentes requeridas por AAQSA para realizar tareas críticas y operar equipos/vehículos?" },
-          { id:"1.2.3", texto:"¿Ha liderado la elaboración del ATS/IPERC Continuo con su equipo verificando que todos comprenden los controles antes de iniciar? ¿Los permisos de trabajo requeridos están gestionados y disponibles en campo?" }
         ]},
         { subtitulo: "1.3 Liderazgo SHE", items: [
-          { id:"1.3.1", texto:"¿Ha liderado la reunión de inicio de turno (Toolbox Talk) resaltando los riesgos críticos del día y los controles a implementar, y ha verificado mediante preguntas que el equipo está listo para trabajar?" },
-          { id:"1.3.2", texto:"¿Realiza recorridos de liderazgo visible (VFL) en campo, interactuando con su equipo sobre comportamientos seguros? ¿Detiene y corrige prácticas inseguras cuando las identifica?" },
-          { id:"1.3.3", texto:"¿Comprende sus obligaciones y responsabilidades conforme al D.S. 024-2016-EM y al Manual SIG SHE de AAQSA para Empresas Contratistas?" },
-          { id:"1.3.4", texto:"¿Reporta de forma inmediata todo incidente, HPH (High Potential Hazard) o condición subestándar identificada en campo a la supervisión de AAQSA y su jefatura directa?" }
-        ]}
+          { id:"1.3.1", texto:"¿Ha participado la reunión de inicio de turno resaltando los riesgos críticos del día y los controles a implementar, y ha verificado mediante preguntas que el equipo está listo para trabajar?" },
+        ]},
       ]
     },
     {
       id: 2, titulo: "2. PERSONAL / TRABAJADORES (CONTRATISTA)",
       criterios: [
         { subtitulo: "2.1 Competencia y Experiencia", items: [
-          { id:"2.1.1", texto:"¿Conocen los peligros, riesgos y controles de las tareas a ejecutar según la Matriz IPERC Línea Base, el ATS/IPERC Continuo y los estándares SHE de AAQSA aplicables?" },
-          { id:"2.1.2", texto:"¿Conocen con detalle los pasos, recursos y controles críticos del PETS de las tareas en que participan, y aplican los controles de los Estándares Críticos de Fatales (ECF) correspondientes?" },
-          { id:"2.1.3", texto:"¿Demuestran conocimiento y experiencia para operar maquinaria, equipos y herramientas de manera segura? ¿Conocen los riesgos asociados (línea de fuego, atrapamiento, etc.) y cómo mitigarlos?" },
-          { id:"2.1.4", texto:"¿Son capaces de identificar las fuentes de energía presentes en la tarea y conocen cómo aislarlas y bloquearlas conforme al Estándar de Aislamiento de Energía de AAQSA?" },
-          { id:"2.1.5", texto:"¿Conocen el correcto uso, inspección y almacenamiento de los EPP requeridos para las tareas que realizan? ¿Los llevan correctamente puestos en campo?" },
-          { id:"2.1.6", texto:"¿Han inspeccionado el lugar de trabajo antes de iniciar, asegurando condiciones adecuadas (orden, limpieza, demarcación) y considerado peligros del nivel superior, inferior y entorno en el ATS/IPERC Continuo?" },
-          { id:"2.1.7", texto:"¿Conocen las posibles situaciones de emergencia del área, la ubicación de los equipos de respuesta (extintores, kit de derrames, botiquín) y cómo comunicarlas?" }
+          { id:"2.1.1", texto:"¿Son capaces de identificar las fuentes de energía presentes en la tarea y conocen cómo aislarlas y bloquearlas conforme al Estándar de Aislamiento de Energía de AAQSA?" },
+          { id:"2.1.2", texto:"¿Conocen el correcto uso, inspección y almacenamiento de los EPP requeridos para las tareas que realizan? ¿Los llevan correctamente puestos en campo?" },
         ]},
         { subtitulo: "2.2 Empoderamiento y Responsabilidad", items: [
           { id:"2.2.1", texto:"¿Se encuentran física y mentalmente aptos para trabajar (libres de fatiga, alcohol, drogas o medicamentos que afecten su desempeño)? ¿Pueden reconocer cuándo un compañero no está en condiciones de trabajar?" },
           { id:"2.2.2", texto:"¿Han participado activamente en la reunión de inicio de turno y en la elaboración del ATS/IPERC Continuo, expresando sus preocupaciones SHE antes de iniciar la tarea?" },
-          { id:"2.2.3", texto:"¿Comprenden su responsabilidad de detener las actividades ante cambios en el alcance del trabajo, nuevos peligros no controlados o si los controles establecidos no pueden implementarse?" },
-          { id:"2.2.4", texto:"¿Cuentan con las acreditaciones y habilitaciones vigentes requeridas para las tareas críticas y equipos que operan? ¿Conocen los roles y responsabilidades de cada miembro del equipo?" },
-          { id:"2.2.5", texto:"¿Comprenden la importancia de reportar de forma inmediata cualquier incidente, HPH o condición subestándar identificada, y las consecuencias de no hacerlo?" }
-        ]}
+        ]},
       ]
     },
     {
       id: 3, titulo: "3. SUPERVISOR SHE (CONTRATISTA)",
       criterios: [
         { subtitulo: "3.1 Competencia Técnica SHE", items: [
-          { id:"3.1.1", texto:"¿Conoce los estándares operativos SHE de AAQSA (ESO, ECF, procedimientos) aplicables a las tareas supervisadas y se asegura que el equipo los comprenda y aplique en campo?" },
+          { id:"3.1.1", texto:"¿Conoce los estándares operativos SHE de AAQSA, procedimientos aplicables a las tareas supervisadas y se asegura que el equipo los comprenda y aplique en campo?" },
           { id:"3.1.2", texto:"¿Conoce el PETS de las tareas, ha verificado que contemple todos los pasos y controles necesarios, y que el personal lo aplica durante la ejecución?" },
-          { id:"3.1.3", texto:"¿Ha verificado que todas las fuentes de energía han sido correctamente identificadas, aisladas y bloqueadas conforme al Estándar de Aislamiento de Energía (AA-QLL-SHE-ESO-0028), asegurando el entendimiento del equipo?" },
-          { id:"3.1.4", texto:"¿Inspecciona el área de trabajo antes, durante y al final de la tarea verificando condiciones adecuadas (orden, limpieza, demarcación, señalización), involucrando al Supervisor Operativo en las observaciones?" },
-          { id:"3.1.5", texto:"¿Ha verificado el correcto llenado del ATS/IPERC Continuo y los permisos de trabajo requeridos, incluyendo la identificación de peligros del entorno (nivel superior, inferior, alrededores) y su validación por el Supervisor Operativo?" }
+          { id:"3.1.3", texto:"¿Ha verificado el correcto llenado del ATS/IPERC Continuo y los permisos de trabajo requeridos y su validación por el Supervisor Operativo?" },
         ]},
         { subtitulo: "3.2 Liderazgo SHE y Soporte en Campo", items: [
-          { id:"3.2.1", texto:"¿Ha verificado que el Supervisor Operativo y el personal conocen la Matriz IPERC Línea Base, el PETS y los controles críticos de los ECF aplicables, y saben cómo proceder si un control crítico no puede implementarse?" },
-          { id:"3.2.2", texto:"¿Brinda soporte técnico SHE en campo al Supervisor Operativo y trabajadores en la identificación de peligros, aplicación de controles y resolución de situaciones no planificadas?" },
-          { id:"3.2.3", texto:"¿Se asegura que el Supervisor Operativo lidere el Toolbox Talk con el personal, participa activamente reforzando los temas críticos del día y verifica el entendimiento del equipo antes de iniciar?" },
-          { id:"3.2.4", texto:"¿Realiza recorridos de liderazgo visible (VFL) en campo, interactuando con supervisores y trabajadores sobre comportamientos y condiciones seguras? ¿Detiene e interviene ante prácticas o condiciones inseguras?" }
+          { id:"3.2.1", texto:"¿Brinda soporte técnico SHE en campo al Supervisor Operativo y trabajadores en la identificación de peligros, aplicación de controles y resolución de situaciones no planificadas?" },
         ]},
         { subtitulo: "3.3 Empoderamiento y Responsabilidades", items: [
-          { id:"3.3.1", texto:"¿Verifica que se cuenten con todos los recursos necesarios (personal, equipos, EPP) en condiciones operativas para completar la tarea de forma segura, antes de autorizar el inicio del trabajo?" },
-          { id:"3.3.2", texto:"¿Identifica las posibles situaciones de emergencia de la tarea, conoce el Plan de Respuesta a Emergencias de AAQSA y verifica que todo el equipo conozca los contactos y protocolos de actuación?" },
-          { id:"3.3.3", texto:"¿Informa oportunamente a la Supervisión SHE de AAQSA sobre cambios en el alcance, HPH identificados en campo, incidentes o cualquier situación que requiera decisión operativa o reporte formal?" },
-          { id:"3.3.4", texto:"¿Ha verificado que todos los trabajadores cuentan con acreditaciones, habilitaciones vigentes y certificado de aptitud médica ocupacional requeridos por AAQSA y el D.S. 024-2016-EM?" }
-        ]}
+          { id:"3.3.1", texto:"¿Identifica las posibles situaciones de emergencia de la tarea, conoce el Plan de Respuesta a Emergencias de AAQSA y verifica que todo el equipo conozca los contactos y protocolos de actuación?" },
+        ]},
       ]
     },
     {
@@ -981,23 +954,14 @@ const CHECKLIST = {
       criterios: [
         { subtitulo: "4.1 Maquinaria y Equipos Estacionarios", items: [
           { id:"4.1.1", texto:"¿La maquinaria ha sido inspeccionada con el check list preoperativo correspondiente y se encuentra en condiciones operativas?" },
-          { id:"4.1.2", texto:"¿La maquinaria cuenta con mantenimiento preventivo vigente conforme al programa de mantenimiento de la contratista?" },
-          { id:"4.1.3", texto:"¿La maquinaria cuenta con dispositivos que permitan el bloqueo conforme al Estándar de Aislamiento de Energía de AAQSA (AA-QLL-SHE-ESO-0028) para labores de mantenimiento preventivo/correctivo?" },
-          { id:"4.1.4", texto:"¿La maquinaria cuenta con todos los dispositivos de seguridad (guardas, parada de emergencia, protección eléctrica) y señalización según el manual de operación y el Estándar de Guardas de Protección (AA-QLL-SHE-ESO-0033)?" },
-          { id:"4.1.5", texto:"¿Los componentes eléctricos (cables, tableros, conectores, puestas a tierra) se encuentran correctamente instalados, inspeccionados y cumplen el Estándar de Puesta a Tierra de AAQSA (AA-QLL-SHE-ESO-0045)?" }
         ]},
         { subtitulo: "4.2 Equipo Pesado / Liviano / Móvil", items: [
           { id:"4.2.1", texto:"¿El equipo ha sido inspeccionado completando el check list preoperativo, y este refleja las condiciones reales del equipo?" },
-          { id:"4.2.2", texto:"¿El equipo cuenta con mantenimiento preventivo vigente y ha sido habilitado conforme al Instructivo de Habilitación de Vehículos y Equipos de AAQSA (AA-QLL-SHE-INS-0007)?" },
-          { id:"4.2.3", texto:"¿El equipo cuenta con todos los dispositivos de seguridad requeridos (alarma de retroceso, cinturón de seguridad, acceso con 3 puntos de apoyo, etc.) y elementos de seguridad (tacos, conos, triángulos) conforme al estándar de AAQSA?" },
-          { id:"4.2.4", texto:"¿Si se realizan izajes: el equipo cuenta con certificación vigente expedida por entidad competente, y sus accesorios (eslingas, grilletes, ganchos) están inspeccionados, operativos y almacenados correctamente?" }
         ]},
         { subtitulo: "4.3 Herramientas Manuales, de Poder y Materiales", items: [
-          { id:"4.3.1", texto:"¿Las herramientas manuales y de poder han sido inspeccionadas, se encuentran operativas según manual de operación/informe técnico, y se almacenan correctamente?" },
-          { id:"4.3.2", texto:"¿Las herramientas de poder cuentan con todos los dispositivos de seguridad (guardas, doble aislamiento, interruptor hombre muerto) según el manual de operación y estándares de AAQSA?" },
-          { id:"4.3.3", texto:"¿Los productos químicos utilizados se encuentran en envases adecuados, correctamente etiquetados, almacenados conforme a la Matriz de Compatibilidad y cuentan con las Fichas de Datos de Seguridad (FDS) disponibles en campo?" },
-          { id:"4.3.4", texto:"¿Se cuenta con los materiales necesarios para realizar la tarea, en buen estado y correctamente almacenados en un lugar específico con las condiciones requeridas?" }
-        ]}
+          { id:"4.3.1", texto:"¿Las herramientas manuales y de poder han sido inspeccionadas, se encuentran operativas?" },
+          { id:"4.3.2", texto:"¿Los productos químicos utilizados se encuentran en envases adecuados, correctamente etiquetados, almacenados conforme a la Matriz de Compatibilidad y cuentan con las Fichas de Datos de Seguridad (FDS) disponibles en campo?" },
+        ]},
       ]
     },
     {
@@ -1005,16 +969,11 @@ const CHECKLIST = {
       criterios: [
         { subtitulo: "5.1 Residuos, Fugas y Derrames", items: [
           { id:"5.1.1", texto:"¿Se ha definido cómo y dónde almacenar temporalmente los residuos generados por la tarea (segregación, contenedores rotulados), conforme al Estándar de Residuos Sólidos y Líquidos de AAQSA (AA-QLL-SHE-ESO-0003)? ¿Es de conocimiento de todo el equipo?" },
-          { id:"5.1.2", texto:"¿Se cuenta con los recursos necesarios (kit anti-derrames, absorbentes, EPP específico) para actuar ante fugas o derrames de productos químicos? ¿El equipo conoce el protocolo de primera respuesta de AAQSA (MATPEL)?" },
-          { id:"5.1.3", texto:"¿Se han identificado los aspectos e impactos ambientales de la tarea (emisiones, generación de residuos peligrosos, riesgo de contaminación de suelo/agua) y están registrados en el ATS/IPERC Continuo u otro documento aplicable?" }
-        ]}
+        ]},
       ]
-    }
+    },
   ]
 };
-
-// Estado de respuestas: { itemId: { cal: 'C'|'EP'|'NC'|'NA', obs: '', fotos: [urls] } }
-const respuestas = {};
 
 // ══════════════════════════════════════════════
 // INIT
@@ -1048,6 +1007,12 @@ async function init() {
   const now = new Date();
   document.getElementById('fecha').value = now.toISOString().split('T')[0];
   document.getElementById('hora').value = now.toTimeString().slice(0,5);
+
+  // Auto-fill Supervisor AAQSA - DIMARZA con nombre del auditor logueado
+  const supAaqField = document.getElementById('sup-aaqsa');
+  if (supAaqField && currentSession) {
+    supAaqField.value = `${currentSession.nombres || ''} ${currentSession.apellidos || ''}`.trim();
+  }
 
   // Load empresas
   await loadEmpresas();
@@ -1582,26 +1547,71 @@ async function enviarVerificacion() {
     rowData['fotos'] = JSON.stringify(todasLasFotos);
     todasLasFotos.forEach((b64, i) => { rowData[`foto_${i + 1}`] = b64; });
 
-    await fetch(`${CONFIG.SHEETBEST_URL}/tabs/auditorias`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(rowData)
-    });
+    // Guardar en Sheets con reintentos (hasta 4 intentos)
+    let saved = false;
+    let lastError = null;
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      try {
+        const res = await fetch(`${CONFIG.SHEETBEST_URL}/tabs/auditorias`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rowData)
+        });
+        if (res.ok) {
+          saved = true;
+          console.log(`✅ Guardado en Sheets (intento ${attempt})`);
+          break;
+        } else {
+          lastError = `HTTP ${res.status}`;
+          console.warn(`⚠️ Intento ${attempt} fallido: ${lastError}`);
+        }
+      } catch (e) {
+        lastError = e.message;
+        console.warn(`⚠️ Intento ${attempt} error: ${lastError}`);
+      }
+      if (attempt < 4) await new Promise(r => setTimeout(r, 2000 * attempt));
+    }
+    if (!saved) {
+      // Guardar localmente como backup JSON por si falla Sheets
+      const backupKey = `aaq_backup_${Date.now()}`;
+      localStorage.setItem(backupKey, JSON.stringify({...rowData, fotos: `[${todasLasFotos.length} fotos]`}));
+      console.error('❌ No se pudo guardar en Sheets. Backup guardado en localStorage:', backupKey);
+      // No interrumpir — continuar con PDF
+    }
 
     // 3. Generate PDF
     showSpinner('Generando PDF...');
     const pdfBlob = await generatePDF(rowData, pctByElem, pctGeneral, allItems);
 
-    // 4. Enviar PDF por email
-    showSpinner('Enviando PDF por correo...');
-    const emailEnviado = await sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral);
+    // 4. Guardar PDF en Google Drive
+    showSpinner('Guardando PDF en Drive...');
+    let driveGuardado = false;
+    try {
+      // Convertir blob a base64
+      const pdfBase64 = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(pdfBlob);
+      });
+      const fileName = `AAQ_Verificacion_${empresa.replace(/\s+/g,'_')}_${fecha}.pdf`;
+      if (CONFIG.DRIVE_WEBAPP_URL) {
+        const driveRes = await fetch(CONFIG.DRIVE_WEBAPP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName, pdfBase64, empresa, fecha, auditor: rowData.auditor, pct: pctGeneral })
+        });
+        if (driveRes.ok) { driveGuardado = true; console.log('✅ PDF guardado en Drive'); }
+        else { console.warn('Drive save failed:', await driveRes.text()); }
+      }
+    } catch(e) { console.warn('Drive error:', e.message); }
 
     hideSpinner();
-    const emailMsg = emailEnviado
-      ? `\n📧 PDF enviado a: ${currentSession.email}`
-      : currentSession.email
-        ? `\n⚠️ Error al enviar email a ${currentSession.email}. Revisa EmailJS History.`
-        : '\n⚠️ El auditor no tiene correo registrado en el sistema.';
+    const emailMsg = driveGuardado
+      ? '\n✅ PDF guardado en Google Drive correctamente.'
+      : CONFIG.DRIVE_WEBAPP_URL
+        ? '\n⚠️ No se pudo guardar en Drive. El PDF se descargó localmente.'
+        : '\n📥 PDF descargado localmente (Drive no configurado aún).';
 
     alert(`✅ Verificación enviada correctamente.\n\nCumplimiento General: ${pctGeneral}%${emailMsg}`);
 
