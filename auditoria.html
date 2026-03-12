@@ -2002,6 +2002,32 @@ async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
       return `${e.titulo}: ${avg !== null ? avg + '%' : 'N/A'}`;
     }).join('\n');
 
+// --- INICIO CONEXIÓN A GOOGLE DRIVE ---
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPW7y3E5tF6c3CELOpGkXr0wjHK4Dp2x1ol0SlgaatufcwulDpoicsRGbYxKDavIpf/exec';
+    
+    try {
+      console.log("Enviando archivo a Google Drive...");
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        // El text/plain es clave para que Google no bloquee la subida
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify({
+          fileName: `Auditoria_${empresa}_${fecha}.pdf`, 
+          pdfBase64: pdfBase64,
+          empresa: empresa,
+          fecha: fecha,
+          auditor: nombre,
+          pct: pctGeneral
+        })
+      });
+      console.log("PDF guardado en Drive correctamente");
+    } catch(err) {
+      console.error("Error al intentar guardar en Drive:", err);
+    }
+    // --- FIN CONEXIÓN A GOOGLE DRIVE ---
+
     await emailjs.send(
       CONFIG.EMAILJS_SERVICE_ID,
       CONFIG.EMAILJS_TEMPLATE_ID,
