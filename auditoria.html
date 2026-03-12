@@ -1963,6 +1963,10 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
 // ══════════════════════════════════════════════
 // EMAIL — EmailJS, Sheets y Google Drive
 // ══════════════════════════════════════════════
+
+// ══════════════════════════════════════════════
+// EMAIL — EmailJS, Sheets y Google Drive
+// ══════════════════════════════════════════════
 async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
   const email = currentSession.email;
   const nombre = `${currentSession.nombres} ${currentSession.apellidos}`;
@@ -1976,7 +1980,6 @@ async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(pdfUrl), 3000);
 
-  // Si no hay email del auditor, salimos (EmailJS ya está configurado)
   if (!email) {
     console.warn('Auditor sin email registrado en Sheets.');
     return false;
@@ -1988,15 +1991,14 @@ async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
   }
 
   try {
-    // Convertir blob a base64 para adjuntar a Drive y EmailJS
+    // Convertir blob a base64
     const pdfBase64 = await new Promise((res) => {
       const reader = new FileReader();
       reader.onload = () => res(reader.result.split(',')[1]);
       reader.readAsDataURL(pdfBlob);
     });
 
-    // Estado de calificaciones para resumen
-    const allItems = CHECKLIST.elementos.flatMap(e => e.criterios.flatMap(c => c.items));
+    // Resumen
     const resumen = CHECKLIST.elementos.map(e => {
       const items = e.criterios.flatMap(c => c.items);
       const pcts = items.filter(i => respuestas[i.id]?.cal && respuestas[i.id].cal !== 'NA');
@@ -2004,6 +2006,60 @@ async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
       return `${e.titulo}: ${avg !== null ? avg + '%' : 'N/A'}`;
     }).join('\n');
 
+    // ==========================================
+    // 1. GUARDAR EN SHEETS
+    // ==========================================
+    try {
+      console.log("Registrando en Sheets...");
+      await fetch(CONFIG.SHEETBEST_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Fecha: fecha, Empresa: empresa, Auditor: nombre,
+          Trabajo: trabajo, Cumplimiento: pctGeneral + "%", Resumen: resumen
+        })
+      });
+      console.log("✅ Sheets OK");
+    } catch(err) { console.error("❌ Error Sheets:", err); }
+
+    // ==========================================
+    // 2. GUARDAR EN DRIVE
+    // ==========================================
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPW7y3E5tF6c3CELOpGkXr0wjHK4Dp2x1ol0SlgaatufcwulDpoicsRGbYxKDavIpf/exec';
+    try {
+      console.log("Enviando a Drive...");
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          fileName: `Auditoria_${empresa.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`, 
+          pdfBase64: pdfBase64, empresa: empresa, fecha: fecha, auditor: nombre, pct: pctGeneral
+        })
+      });
+      console.log("✅ Drive OK");
+    } catch(err) { console.error("❌ Error Drive:", err); }
+
+    // ==========================================
+    // 3. ENVIAR CORREO
+    // ==========================================
+    console.log("Enviando EmailJS...");
+    await emailjs.send(
+      CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_ID,
+      {
+        to_email: email, to_name: nombre, empresa: empresa, trabajo: trabajo,
+        pct_general: pctGeneral + '%', fecha: fecha, resumen: resumen,
+        pdf_base64: pdfBase64, pdf_nombre: `AAQ_Verificacion_${empresa.replace(/\s+/g,'_')}.pdf`
+      },
+      CONFIG.EMAILJS_PUBLIC_KEY
+    );
+    console.log("✅ Correo OK");
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error general:', error);
+    return false;
+  }
+}
     // =========================================================
     // 1. GUARDAR DATOS EN GOOGLE SHEETS (Vía SheetBest)
     // =========================================================
