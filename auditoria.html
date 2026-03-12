@@ -2002,16 +2002,42 @@ async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
       return `${e.titulo}: ${avg !== null ? avg + '%' : 'N/A'}`;
     }).join('\n');
 
-// --- INICIO CONEXIÓN A GOOGLE DRIVE ---
+// =========================================================
+    // 1. GUARDAR DATOS EN GOOGLE SHEETS (Vía SheetBest)
+    // =========================================================
+    try {
+      console.log("Registrando datos en Google Sheets...");
+      // Asumimos que usas la misma URL de SheetBest que usas para cargar empresas
+      await fetch(CONFIG.SHEETBEST_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          Fecha: fecha,
+          Empresa: empresa,
+          Auditor: nombre,
+          Trabajo: trabajo,
+          Cumplimiento: pctGeneral + "%",
+          Resumen: resumen
+        })
+      });
+      console.log("✅ Datos registrados en Sheets");
+    } catch(err) {
+      console.error("❌ Error al guardar en Sheets:", err);
+    }
+
+    // =========================================================
+    // 2. GUARDAR PDF EN GOOGLE DRIVE (Vía Apps Script)
+    // =========================================================
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPW7y3E5tF6c3CELOpGkXr0wjHK4Dp2x1ol0SlgaatufcwulDpoicsRGbYxKDavIpf/exec';
     
     try {
-      console.log("Enviando archivo a Google Drive...");
+      console.log("Enviando PDF a Google Drive...");
       await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        // El text/plain es clave para que Google no bloquee la subida
         headers: {
-          "Content-Type": "text/plain;charset=utf-8"
+          "Content-Type": "text/plain;charset=utf-8" // Vital para evitar el bloqueo CORS de Google
         },
         body: JSON.stringify({
           fileName: `Auditoria_${empresa}_${fecha}.pdf`, 
@@ -2022,11 +2048,10 @@ async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
           pct: pctGeneral
         })
       });
-      console.log("PDF guardado en Drive correctamente");
+      console.log("✅ PDF guardado en Drive correctamente");
     } catch(err) {
-      console.error("Error al intentar guardar en Drive:", err);
+      console.error("❌ Error al intentar guardar en Drive:", err);
     }
-    // --- FIN CONEXIÓN A GOOGLE DRIVE ---
 
     await emailjs.send(
       CONFIG.EMAILJS_SERVICE_ID,
