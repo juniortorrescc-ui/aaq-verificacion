@@ -871,10 +871,7 @@
 // ============================================================
 const CONFIG = {
   SHEETBEST_URL: 'https://api.sheetbest.com/sheets/5892a5ad-bcbb-4505-bd68-762fba3f05fe',
-  // EmailJS — Registrate en emailjs.com (gratis) y completa estos 3 datos:
-  EMAILJS_SERVICE_ID:  'service_4lk395d',    // ej: 'service_abc123'
-  EMAILJS_TEMPLATE_ID: 'template_ohagk2f',   // ej: 'template_xyz789'
-  EMAILJS_PUBLIC_KEY:  'jfs-lUeazoZ4EQ2FY',    // ej: 'user_AbCdEfGhIjKlMn'
+  DRIVE_WEBAPP_URL: '', // Pegar URL del Apps Script Web App aqui
 };
 
 
@@ -1478,16 +1475,32 @@ async function enviarVerificacion() {
     showSpinner('Generando PDF...');
     const pdfBlob = await generatePDF(rowData, pctByElem, pctGeneral, allItems);
 
-    // 4. Enviar PDF por email
-    showSpinner('Enviando PDF por correo...');
-    const emailEnviado = await sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral);
-
+    // 4. Guardar PDF en Drive + descarga local
+    showSpinner('Guardando PDF...');
+    let driveGuardado = false;
+    try {
+      if (CONFIG.DRIVE_WEBAPP_URL) {
+        const pdfBase64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = () => res(reader.result.split(',')[1]);
+          reader.onerror = rej;
+          reader.readAsDataURL(pdfBlob);
+        });
+        const fileName = 'AAQ_Verificacion_' + empresa.replace(/\s+/g,'_') + '_' + fecha + '.pdf';
+        const dr = await fetch(CONFIG.DRIVE_WEBAPP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName, pdfBase64, empresa, fecha, auditor: rowData.auditor, pct: pctGeneral })
+        });
+        if (dr.ok) driveGuardado = true;
+      }
+    } catch(e) { console.warn('Drive error:', e.message); }
     hideSpinner();
-    const emailMsg = emailEnviado
-      ? `\n📧 PDF enviado a: ${currentSession.email}`
-      : currentSession.email
-        ? `\n⚠️ Error al enviar email a ${currentSession.email}. Revisa EmailJS History.`
-        : '\n⚠️ El auditor no tiene correo registrado en el sistema.';
+    const emailMsg = driveGuardado
+      ? '\nPDF guardado en Google Drive correctamente.'
+      : CONFIG.DRIVE_WEBAPP_URL
+        ? '\nNo se pudo guardar en Drive. PDF descargado localmente.'
+        : '\nPDF descargado localmente.';
 
     alert(`✅ Verificación enviada correctamente.\n\nCumplimiento General: ${pctGeneral}%${emailMsg}`);
 
@@ -1790,68 +1803,8 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
 // ══════════════════════════════════════════════
 // EMAIL — EmailJS (PDF adjunto)
 // ══════════════════════════════════════════════
-async function sendEmailPDF(pdfBlob, empresa, trabajo, pctGeneral) {
-  const email = currentSession.email;
-  const nombre = `${currentSession.nombres} ${currentSession.apellidos}`;
-  const fecha  = new Date().toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' });
+// sendEmailPDF removido
 
-  // Siempre descargar el PDF localmente (garantía de entrega)
-  const pdfUrl = URL.createObjectURL(pdfBlob);
-  const a = document.createElement('a');
-  a.href = pdfUrl;
-  a.download = `AAQ_Verificacion_${empresa.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(pdfUrl), 3000);
-
-  // Si no hay email del auditor, salimos (EmailJS ya está configurado)
-  if (!email) {
-    console.warn('Auditor sin email registrado en Sheets.');
-    return false;
-  }
-  if (!CONFIG.EMAILJS_SERVICE_ID || !CONFIG.EMAILJS_TEMPLATE_ID || !CONFIG.EMAILJS_PUBLIC_KEY) {
-    console.warn('EmailJS credentials missing.');
-    return false;
-  }
-
-  try {
-    // Convertir blob a base64 para adjuntar
-    const pdfBase64 = await new Promise((res) => {
-      const reader = new FileReader();
-      reader.onload = () => res(reader.result.split(',')[1]);
-      reader.readAsDataURL(pdfBlob);
-    });
-
-    // Estado de calificaciones para resumen en email
-    const allItems = CHECKLIST.elementos.flatMap(e => e.criterios.flatMap(c => c.items));
-    const resumen = CHECKLIST.elementos.map(e => {
-      const items = e.criterios.flatMap(c => c.items);
-      const pcts = items.filter(i => respuestas[i.id]?.cal && respuestas[i.id].cal !== 'NA');
-      const avg = pcts.length ? Math.round(pcts.reduce((s,i) => s + (PCT_MAP[respuestas[i.id].cal]||0), 0) / pcts.length) : null;
-      return `${e.titulo}: ${avg !== null ? avg + '%' : 'N/A'}`;
-    }).join('\n');
-
-    await emailjs.send(
-      CONFIG.EMAILJS_SERVICE_ID,
-      CONFIG.EMAILJS_TEMPLATE_ID,
-      {
-        to_email:    email,
-        to_name:     nombre,
-        empresa:     empresa,
-        trabajo:     trabajo,
-        pct_general: pctGeneral + '%',
-        fecha:       fecha,
-        resumen:     resumen,
-        pdf_base64:  pdfBase64,
-        pdf_nombre:  `AAQ_Verificacion_${empresa.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`,
-      },
-      CONFIG.EMAILJS_PUBLIC_KEY
-    );
-    return true;
-  } catch(err) {
-    console.error('EmailJS error:', err);
-    return false;
-  }
-}
 
 // ══════════════════════════════════════════════
 // START
