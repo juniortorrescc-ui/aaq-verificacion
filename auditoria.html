@@ -1639,15 +1639,16 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
         animation:false,
         plugins:{ legend:{display:false} },
         scales:{
-          y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{size:22}, color:'#374151' }},
-          x:{ ticks:{ font:{size:22, weight:'bold'}, color:'#1A1A2E' }, maxRotation:0 }
-        }
+          y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{size:40}, color:'#374151' }},
+          x:{ ticks:{ font:{size:42, weight:'bold'}, color:'#1A1A2E' }, maxRotation:0 }
+        },
+        layout:{ padding:{ top:8, bottom:8 } }
       }
     });
-    await new Promise(r=>setTimeout(r,300));
+    await new Promise(r=>setTimeout(r,400));
     const imgBar = chartCanvas.toDataURL('image/png');
-    doc.addImage(imgBar,'PNG',ml,y,cw,45);
-    y += 47;
+    doc.addImage(imgBar,'PNG',ml,y,cw,36);
+    y += 39;
     chartCanvas.remove();
   } catch(e){ y += 5; }
 
@@ -1681,10 +1682,10 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
           legend:{
             position:'right',
             labels:{
-              font:{ size:32, weight:'bold' },
+              font:{ size:48, weight:'bold' },
               color:'#1A1A2E',
-              padding:28,
-              boxWidth:40
+              padding:32,
+              boxWidth:56
             }
           }
         }
@@ -1693,8 +1694,8 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
     await new Promise(r=>setTimeout(r,400));
     const imgDona = donaCanvas.toDataURL('image/png');
     // Usar todo el ancho disponible para que la leyenda sea grande
-    doc.addImage(imgDona,'PNG',ml,y,cw,60);
-    y += 64;
+    doc.addImage(imgDona,'PNG',ml+(cw-100)/2,y,100,50);
+    y += 54;
     donaCanvas.remove();
   } catch(e){ y += 5; }
 
