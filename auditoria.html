@@ -871,7 +871,7 @@
 // ============================================================
 const CONFIG = {
   SHEETBEST_URL: 'https://api.sheetbest.com/sheets/5892a5ad-bcbb-4505-bd68-762fba3f05fe',
-  DRIVE_WEBAPP_URL: '', // Pegar URL del Apps Script Web App aqui
+  DRIVE_WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxzetqHBAeMu3e8m0siU4GXpEStWhw9eYWVUX8P4zSMxZTwcU7KzfIzEoC0FqabCdY/exec',
 };
 
 
@@ -1481,8 +1481,20 @@ async function enviarVerificacion() {
     showSpinner('Generando PDF...');
     const pdfBlob = await generatePDF(rowData, pctByElem, pctGeneral, allItems);
 
-    // 4. Guardar PDF en Drive + descarga local
-    showSpinner('Guardando PDF...');
+    // 4. Descargar PDF localmente (siempre) + guardar en Drive
+    showSpinner('Generando descarga...');
+
+    // AUTO-DESCARGA local — siempre ocurre
+    const auditorNombre = (rowData.auditor || 'Auditor').replace(/\s+/g,'_');
+    const fileName = auditorNombre + '_' + empresa.replace(/\s+/g,'_') + '_' + fecha + '.pdf';
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const dlLink = document.createElement('a');
+    dlLink.href = pdfUrl;
+    dlLink.download = fileName;
+    dlLink.click();
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 5000);
+
+    // SUBIR A DRIVE (en paralelo, no bloquea)
     let driveGuardado = false;
     try {
       if (CONFIG.DRIVE_WEBAPP_URL) {
@@ -1492,21 +1504,19 @@ async function enviarVerificacion() {
           reader.onerror = rej;
           reader.readAsDataURL(pdfBlob);
         });
-        const fileName = 'AAQ_Verificacion_' + empresa.replace(/\s+/g,'_') + '_' + fecha + '.pdf';
         const dr = await fetch(CONFIG.DRIVE_WEBAPP_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileName, pdfBase64, empresa, fecha, auditor: rowData.auditor, pct: pctGeneral })
         });
         if (dr.ok) driveGuardado = true;
+        else console.warn('Drive respondió:', dr.status);
       }
     } catch(e) { console.warn('Drive error:', e.message); }
     hideSpinner();
     const emailMsg = driveGuardado
-      ? '\nPDF guardado en Google Drive correctamente.'
-      : CONFIG.DRIVE_WEBAPP_URL
-        ? '\nNo se pudo guardar en Drive. PDF descargado localmente.'
-        : '\nPDF descargado localmente.';
+      ? '\n✅ PDF descargado y guardado en Google Drive.'
+      : '\n📥 PDF descargado. (No se pudo guardar en Drive, revisa la conexión.)';
 
     alert(`✅ Verificación enviada correctamente.\n\nCumplimiento General: ${pctGeneral}%${emailMsg}`);
 
