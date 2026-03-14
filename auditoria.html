@@ -956,81 +956,7 @@ const CHECKLIST = {
     },
   ]
 };
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
-let currentSession = null;
 
-function getSession() {
-  try {
-    return JSON.parse(sessionStorage.getItem('aaq_session') || localStorage.getItem('aaq_session') || 'null');
-  } catch(e) { return null; }
-}
-
-function logout() {
-  localStorage.removeItem('aaq_session');
-  sessionStorage.removeItem('aaq_session');
-  window.location.href = 'login.html';
-}
-
-async function init() {
-  currentSession = getSession();
-  if (!currentSession || currentSession.role !== 'auditor') {
-    window.location.href = 'login.html';
-    return;
-  }
-
-  // Set auditor name
-  document.getElementById('auditor-name').textContent =
-    `${currentSession.nombres} ${currentSession.apellidos} — DNI: ${currentSession.dni}`;
-
-  // Set date/time defaults
-  const now = new Date();
-  document.getElementById('fecha').value = now.toISOString().split('T')[0];
-  document.getElementById('hora').value = now.toTimeString().slice(0,5);
-  // Auto-fill Supervisor AAQSA - DIMARZA
-  const supAaqField = document.getElementById('sup-aaqsa');
-  if (supAaqField && currentSession) {
-    supAaqField.value = `${currentSession.nombres || ''} ${currentSession.apellidos || ''}`.trim();
-  }
-
-  // Load empresas
-  await loadEmpresas();
-
-  // Build checklist
-  buildChecklist();
-
-  // Init signatures
-  updateProgress();
-}
-
-async function loadEmpresas() {
-  try {
-    const res = await fetch(`${CONFIG.SHEETBEST_URL}/tabs/empresas`);
-    const empresas = await res.json();
-    const sel = document.getElementById('empresa');
-    empresas.filter(e => e.activo !== 'false').forEach(e => {
-      const opt = document.createElement('option');
-      opt.value = e.nombre;
-      opt.textContent = e.nombre;
-      sel.appendChild(opt);
-    });
-  } catch(err) {
-    console.warn('No se pudieron cargar empresas:', err);
-    // Fallback empresas de ejemplo
-    const fallback = ['EMPRESA CONTRATISTA 1','EMPRESA CONTRATISTA 2','EMPRESA CONTRATISTA 3'];
-    const sel = document.getElementById('empresa');
-    fallback.forEach(n => {
-      const opt = document.createElement('option');
-      opt.value = n; opt.textContent = n;
-      sel.appendChild(opt);
-    });
-  }
-}
-
-// ══════════════════════════════════════════════
-// BUILD CHECKLIST
-// ══════════════════════════════════════════════
 function buildChecklist() {
   const container = document.getElementById('checklist-container');
   let globalItemNum = 0;
@@ -1125,6 +1051,86 @@ function buildChecklist() {
     container.appendChild(section);
   });
 }
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+let currentSession = null;
+let respuestas = {};
+
+function getSession() {
+  try {
+    return JSON.parse(sessionStorage.getItem('aaq_session') || localStorage.getItem('aaq_session') || 'null');
+  } catch(e) { return null; }
+}
+
+function logout() {
+  localStorage.removeItem('aaq_session');
+  sessionStorage.removeItem('aaq_session');
+  window.location.href = 'login.html';
+}
+
+async function init() {
+  currentSession = getSession();
+  if (!currentSession || currentSession.role !== 'auditor') {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // Set auditor name
+  document.getElementById('auditor-name').textContent =
+    `${currentSession.nombres} ${currentSession.apellidos} — DNI: ${currentSession.dni}`;
+
+  // Set date/time defaults
+  const now = new Date();
+  document.getElementById('fecha').value = now.toISOString().split('T')[0];
+  document.getElementById('hora').value = now.toTimeString().slice(0,5);
+  // Auto-fill Supervisor AAQSA - DIMARZA
+  const supAaqField = document.getElementById('sup-aaqsa');
+  if (supAaqField && currentSession) {
+    supAaqField.value = `${currentSession.nombres || ''} ${currentSession.apellidos || ''}`.trim();
+  }
+
+  // Load empresas (si falla, continua igual)
+  try { await loadEmpresas(); } catch(e) { console.warn('loadEmpresas error:', e); }
+
+  // Build checklist — SIEMPRE se ejecuta
+  try {
+    buildChecklist();
+  } catch(e) {
+    console.error('buildChecklist error:', e);
+  }
+
+  updateProgress();
+}
+
+async function loadEmpresas() {
+  try {
+    const res = await fetch(`${CONFIG.SHEETBEST_URL}/tabs/empresas`);
+    const empresas = await res.json();
+    const sel = document.getElementById('empresa');
+    empresas.filter(e => e.activo !== 'false').forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.nombre;
+      opt.textContent = e.nombre;
+      sel.appendChild(opt);
+    });
+  } catch(err) {
+    console.warn('No se pudieron cargar empresas:', err);
+    // Fallback empresas de ejemplo
+    const fallback = ['EMPRESA CONTRATISTA 1','EMPRESA CONTRATISTA 2','EMPRESA CONTRATISTA 3'];
+    const sel = document.getElementById('empresa');
+    fallback.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n; opt.textContent = n;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+// ══════════════════════════════════════════════
+// BUILD CHECKLIST
+// ══════════════════════════════════════════════
+
 
 function toggleElemento(id) {
   const body = document.getElementById(`body-${id}`);
@@ -1809,7 +1815,7 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
 // ══════════════════════════════════════════════
 // START
 // ══════════════════════════════════════════════
-init();
+init().catch(e => { console.error("init error:", e); buildChecklist(); updateProgress(); });
 </script>
 </body>
 </html>
