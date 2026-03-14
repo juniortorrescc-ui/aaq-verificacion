@@ -1627,7 +1627,7 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
 
   try {
     const chartCanvas = document.createElement('canvas');
-    chartCanvas.width = 560; chartCanvas.height = 200;
+    chartCanvas.width = 1200; chartCanvas.height = 500;
     document.body.appendChild(chartCanvas);
     const chartCtx = chartCanvas.getContext('2d');
     const barsData = [1,2,3,4,5].map(i => pctByElem[i]??0);
@@ -1635,7 +1635,14 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
     new Chart(chartCtx, {
       type:'bar',
       data:{ labels:elemShortNames, datasets:[{data:barsData,backgroundColor:barColors,borderRadius:6}]},
-      options:{ animation:false, plugins:{legend:{display:false}}, scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}
+      options:{
+        animation:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{size:22}, color:'#374151' }},
+          x:{ ticks:{ font:{size:22, weight:'bold'}, color:'#1A1A2E' }, maxRotation:0 }
+        }
+      }
     });
     await new Promise(r=>setTimeout(r,300));
     const imgBar = chartCanvas.toDataURL('image/png');
@@ -1658,7 +1665,7 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
   try {
     // Canvas grande para que la leyenda sea legible
     const donaCanvas = document.createElement('canvas');
-    donaCanvas.width = 600; donaCanvas.height = 320;
+    donaCanvas.width = 1400; donaCanvas.height = 600;
     document.body.appendChild(donaCanvas);
     new Chart(donaCanvas.getContext('2d'), {
       type:'doughnut',
@@ -1674,10 +1681,10 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
           legend:{
             position:'right',
             labels:{
-              font:{ size:18, weight:'bold' },
+              font:{ size:32, weight:'bold' },
               color:'#1A1A2E',
-              padding:20,
-              boxWidth:24
+              padding:28,
+              boxWidth:40
             }
           }
         }
