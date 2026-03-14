@@ -1504,10 +1504,18 @@ async function enviarVerificacion() {
           reader.onerror = rej;
           reader.readAsDataURL(pdfBlob);
         });
+        // Usar form-data para evitar CORS con Apps Script
+        const formData = new FormData();
+        formData.append('fileName', fileName);
+        formData.append('pdfBase64', pdfBase64);
+        formData.append('empresa', empresa);
+        formData.append('fecha', fecha);
+        formData.append('auditor', rowData.auditor || '');
+        formData.append('pct', String(pctGeneral));
+
         const dr = await fetch(CONFIG.DRIVE_WEBAPP_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName, pdfBase64, empresa, fecha, auditor: rowData.auditor, pct: pctGeneral })
+          body: formData
         });
         if (dr.ok) driveGuardado = true;
         else console.warn('Drive respondió:', dr.status);
@@ -1648,8 +1656,9 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
   y += 8;
 
   try {
+    // Canvas grande para que la leyenda sea legible
     const donaCanvas = document.createElement('canvas');
-    donaCanvas.width = 300; donaCanvas.height = 200;
+    donaCanvas.width = 600; donaCanvas.height = 320;
     document.body.appendChild(donaCanvas);
     new Chart(donaCanvas.getContext('2d'), {
       type:'doughnut',
@@ -1657,14 +1666,28 @@ async function generatePDF(data, pctByElem, pctGeneral, allItems) {
         labels:['Cumple (C)','En Proceso (EP)','No Cumple (NC)','No Aplica (NA)'],
         datasets:[{data:[dist.C,dist.EP,dist.NC,dist.NA],
           backgroundColor:['rgba(22,163,74,0.85)','rgba(217,119,6,0.85)','rgba(220,38,38,0.85)','rgba(107,114,128,0.6)'],
-          borderWidth:2}]
+          borderWidth:3}]
       },
-      options:{animation:false,plugins:{legend:{position:'right'}}}
+      options:{
+        animation:false,
+        plugins:{
+          legend:{
+            position:'right',
+            labels:{
+              font:{ size:18, weight:'bold' },
+              color:'#1A1A2E',
+              padding:20,
+              boxWidth:24
+            }
+          }
+        }
+      }
     });
-    await new Promise(r=>setTimeout(r,300));
+    await new Promise(r=>setTimeout(r,400));
     const imgDona = donaCanvas.toDataURL('image/png');
-    doc.addImage(imgDona,'PNG',ml+(cw-80)/2,y,80,50);
-    y += 54;
+    // Usar todo el ancho disponible para que la leyenda sea grande
+    doc.addImage(imgDona,'PNG',ml,y,cw,60);
+    y += 64;
     donaCanvas.remove();
   } catch(e){ y += 5; }
 
